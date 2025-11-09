@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTEK Графік</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: flex-end;
+        }
+
+        .update-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .dtek-update-time {
+            color: #999;
+            font-size: 0.85em;
+        }
+        
+        .queue-section {
+            margin-bottom: 30px;
+        }
+        
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .queue-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .date-title {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .timeline {
+            display: flex;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .hour {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .hour:hover {
+            filter: brightness(1.1);
+            transform: scaleY(1.05);
+        }
+        
+        .hour::after {
+            content: attr(data-time);            
+            bottom: 2px;
+            font-size: 1.5em;
+            opacity: 0.8;
+        }
+        
+        .status-yes {
+            background: #4caf50;
+        }
+        
+        .status-no {
+            background: #f44336;
+        }
+        
+        .status-first, .status-second {
+            background: #ff9800;
+        }
+        
+        .status-unknown {
+            background: #9e9e9e;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .separator {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .hour::after {
+                font-size: 0.7em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">⚡ DTEK Графік відключень</div>
+            <div class="header-info">
+                <div class="update-time">Згенеровано: 09.11.2025 11:29</div>
+                <div class="dtek-update-time">Дата оновлення ДТЕК: 09.11.2025 12:03</div>
+            </div>
+        </div>
+<div class="queue-section">
+            <div class="queue-header">
+                <div class="queue-title">Черга 6.1 - Бобриця</div>
+                <div class="date-title">08.11.2025 (✅ 15год / ❌ 6год)</div>
+            </div>
+            
+            <div class="timeline">
+
+                <div class="hour status-first" 
+                     data-time="01"
+                     title="01:00 - Перші 30хв">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="02"
+                     title="02:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="03"
+                     title="03:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="04"
+                     title="04:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="05"
+                     title="05:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="06"
+                     title="06:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="07"
+                     title="07:00 - Світло є">
+                </div>
+
+                <div class="hour status-second" 
+                     data-time="08"
+                     title="08:00 - Другі 30хв">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="09"
+                     title="09:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="10"
+                     title="10:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="11"
+                     title="11:00 - Відключено">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="12"
+                     title="12:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="13"
+                     title="13:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="14"
+                     title="14:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="15"
+                     title="15:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="16"
+                     title="16:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="17"
+                     title="17:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="18"
+                     title="18:00 - Світло є">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="19"
+                     title="19:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="20"
+                     title="20:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="21"
+                     title="21:00 - Відключено">
+                </div>
+
+                <div class="hour status-first" 
+                     data-time="22"
+                     title="22:00 - Перші 30хв">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="23"
+                     title="23:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="00"
+                     title="00:00 - Світло є">
+                </div>
+
+            </div>
+
+            <div class="queue-header">
+                <div class="queue-title">Черга 6.1 - Бобриця</div>
+                <div class="date-title">09.11.2025 (✅ 24год / ❌ 0год)</div>
+            </div>
+            
+            <div class="timeline">
+
+                <div class="hour status-yes" 
+                     data-time="01"
+                     title="01:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="02"
+                     title="02:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="03"
+                     title="03:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="04"
+                     title="04:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="05"
+                     title="05:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="06"
+                     title="06:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="07"
+                     title="07:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="08"
+                     title="08:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="09"
+                     title="09:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="10"
+                     title="10:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="11"
+                     title="11:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="12"
+                     title="12:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="13"
+                     title="13:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="14"
+                     title="14:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="15"
+                     title="15:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="16"
+                     title="16:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="17"
+                     title="17:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="18"
+                     title="18:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="19"
+                     title="19:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="20"
+                     title="20:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="21"
+                     title="21:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="22"
+                     title="22:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="23"
+                     title="23:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="00"
+                     title="00:00 - Світло є">
+                </div>
+
+            </div>
+</div><div class="separator"></div><div class="queue-section">
+            <div class="queue-header">
+                <div class="queue-title">Черга 3.1 - Стоянка</div>
+                <div class="date-title">08.11.2025 (✅ 16год / ❌ 6год)</div>
+            </div>
+            
+            <div class="timeline">
+
+                <div class="hour status-yes" 
+                     data-time="01"
+                     title="01:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="02"
+                     title="02:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="03"
+                     title="03:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="04"
+                     title="04:00 - Світло є">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="05"
+                     title="05:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="06"
+                     title="06:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="07"
+                     title="07:00 - Відключено">
+                </div>
+
+                <div class="hour status-first" 
+                     data-time="08"
+                     title="08:00 - Перші 30хв">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="09"
+                     title="09:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="10"
+                     title="10:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="11"
+                     title="11:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="12"
+                     title="12:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="13"
+                     title="13:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="14"
+                     title="14:00 - Світло є">
+                </div>
+
+                <div class="hour status-second" 
+                     data-time="15"
+                     title="15:00 - Другі 30хв">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="16"
+                     title="16:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="17"
+                     title="17:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="18"
+                     title="18:00 - Відключено">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="19"
+                     title="19:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="20"
+                     title="20:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="21"
+                     title="21:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="22"
+                     title="22:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="23"
+                     title="23:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="00"
+                     title="00:00 - Світло є">
+                </div>
+
+            </div>
+
+            <div class="queue-header">
+                <div class="queue-title">Черга 3.1 - Стоянка</div>
+                <div class="date-title">09.11.2025 (✅ 24год / ❌ 0год)</div>
+            </div>
+            
+            <div class="timeline">
+
+                <div class="hour status-yes" 
+                     data-time="01"
+                     title="01:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="02"
+                     title="02:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="03"
+                     title="03:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="04"
+                     title="04:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="05"
+                     title="05:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="06"
+                     title="06:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="07"
+                     title="07:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="08"
+                     title="08:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="09"
+                     title="09:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="10"
+                     title="10:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="11"
+                     title="11:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="12"
+                     title="12:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="13"
+                     title="13:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="14"
+                     title="14:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="15"
+                     title="15:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="16"
+                     title="16:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="17"
+                     title="17:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="18"
+                     title="18:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="19"
+                     title="19:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="20"
+                     title="20:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="21"
+                     title="21:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="22"
+                     title="22:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="23"
+                     title="23:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="00"
+                     title="00:00 - Світло є">
+                </div>
+
+            </div>
+</div><div class="separator"></div><div class="queue-section">
+            <div class="queue-header">
+                <div class="queue-title">Черга 3.2 - Софіївська Борщагівка - Радісна, 6</div>
+                <div class="date-title">08.11.2025 (✅ 14год / ❌ 8год)</div>
+            </div>
+            
+            <div class="timeline">
+
+                <div class="hour status-yes" 
+                     data-time="01"
+                     title="01:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="02"
+                     title="02:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="03"
+                     title="03:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="04"
+                     title="04:00 - Світло є">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="05"
+                     title="05:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="06"
+                     title="06:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="07"
+                     title="07:00 - Відключено">
+                </div>
+
+                <div class="hour status-first" 
+                     data-time="08"
+                     title="08:00 - Перші 30хв">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="09"
+                     title="09:00 - Світло є">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="10"
+                     title="10:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="11"
+                     title="11:00 - Відключено">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="12"
+                     title="12:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="13"
+                     title="13:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="14"
+                     title="14:00 - Світло є">
+                </div>
+
+                <div class="hour status-second" 
+                     data-time="15"
+                     title="15:00 - Другі 30хв">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="16"
+                     title="16:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="17"
+                     title="17:00 - Відключено">
+                </div>
+
+                <div class="hour status-no" 
+                     data-time="18"
+                     title="18:00 - Відключено">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="19"
+                     title="19:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="20"
+                     title="20:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="21"
+                     title="21:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="22"
+                     title="22:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="23"
+                     title="23:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="00"
+                     title="00:00 - Світло є">
+                </div>
+
+            </div>
+
+            <div class="queue-header">
+                <div class="queue-title">Черга 3.2 - Софіївська Борщагівка - Радісна, 6</div>
+                <div class="date-title">09.11.2025 (✅ 24год / ❌ 0год)</div>
+            </div>
+            
+            <div class="timeline">
+
+                <div class="hour status-yes" 
+                     data-time="01"
+                     title="01:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="02"
+                     title="02:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="03"
+                     title="03:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="04"
+                     title="04:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="05"
+                     title="05:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="06"
+                     title="06:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="07"
+                     title="07:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="08"
+                     title="08:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="09"
+                     title="09:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="10"
+                     title="10:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="11"
+                     title="11:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="12"
+                     title="12:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="13"
+                     title="13:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="14"
+                     title="14:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="15"
+                     title="15:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="16"
+                     title="16:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="17"
+                     title="17:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="18"
+                     title="18:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="19"
+                     title="19:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="20"
+                     title="20:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="21"
+                     title="21:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="22"
+                     title="22:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="23"
+                     title="23:00 - Світло є">
+                </div>
+
+                <div class="hour status-yes" 
+                     data-time="00"
+                     title="00:00 - Світло є">
+                </div>
+
+            </div>
+</div>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color status-yes"></div>
+                <span>Світло є</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-no"></div>
+                <span>Відключено</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color status-first"></div>
+                <span>Часткове (30хв)</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
