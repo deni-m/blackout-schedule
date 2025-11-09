@@ -10,6 +10,7 @@ import asyncio
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from playwright.async_api import async_playwright
 
 
@@ -502,7 +503,8 @@ async def main_async():
     
     # Створити HTML
     print("🎨 Генерація HTML...")
-    update_time = datetime.now().strftime('%d.%m.%Y %H:%M')
+    kyiv_tz = ZoneInfo('Europe/Kyiv')
+    update_time = datetime.now(kyiv_tz).strftime('%d.%m.%Y %H:%M')
     dtek_update_time = data.get('update', None)
     html = generate_minimal_html(queues_data, update_time, dtek_update_time, QUEUE_NAMES)
     
