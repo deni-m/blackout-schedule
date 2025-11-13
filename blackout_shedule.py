@@ -56,11 +56,17 @@ async def fetch_page_with_playwright():
             page = await context.new_page()
             
             print(f"🌐 Завантаження: {DTEK_URL}")
-            await page.goto(DTEK_URL, wait_until='networkidle', timeout=30000)
-            
+            await page.goto(DTEK_URL, wait_until='load', timeout=30000)
+
             print("⏳ Чекаю на дані...")
-            await page.wait_for_timeout(3000)
-            
+            await page.wait_for_timeout(4000)
+
+            # Ensure page is fully loaded before getting content
+            try:
+                await page.wait_for_load_state('networkidle', timeout=5000)
+            except:
+                pass
+
             html = await page.content()
             
             print("✅ HTML отримано")
@@ -70,30 +76,53 @@ async def fetch_page_with_playwright():
             
     except Exception as e:
         print(f"❌ Помилка Playwright: {e}")
+        import traceback
+        print("📋 Stack trace:")
+        traceback.print_exc()
         return None
 
 
 def extract_schedule_data(html):
     """Витягти DisconSchedule.fact з HTML"""
     print("🔍 Шукаю дані DisconSchedule.fact...")
-    
+
     try:
+        if not html:
+            print("❌ HTML порожній або не завантажено")
+            return None
+
+        print(f"   HTML розмір: {len(html)} символів")
+
         # Виправлений регексп
         pattern = r'DisconSchedule\.fact\s*=\s*(\{.*\})'
         match = re.search(pattern, html, re.DOTALL)
-        
+
         if not match:
-            print("❌ Не знайдено DisconSchedule.fact")
+            print("❌ Не знайдено DisconSchedule.fact у HTML")
+            print("   Перевіряю, чи сторінка завантажилась правильно...")
+            if 'shutdowns' in html:
+                print("   ℹ️  Сторінка завантажилась, але дані не знайдені (можливо, JS не виконав)")
+            else:
+                print("   ℹ️  Сторінка не містить очікуваного контенту")
             return None
-        
+
         json_str = match.group(1)
-        data = json.loads(json_str)
-        
-        print("✅ Дані розпарсено!")
-        return data
-        
+        print(f"   Знайдено JSON рядок довжиною {len(json_str)} символів")
+
+        try:
+            data = json.loads(json_str)
+            print(f"✅ Дані розпарсено! Знайдено записів: {len(data.get('data', {}))}")
+            return data
+        except json.JSONDecodeError as je:
+            print(f"❌ Помилка парсингу JSON: {je}")
+            print(f"   Перші 200 символів JSON: {json_str[:200]}")
+            return None
+
     except Exception as e:
         print(f"❌ Помилка: {e}")
+        import traceback
+        print("📋 Stack trace:")
+        traceback.print_exc()
         return None
 
 
@@ -499,17 +528,29 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
 def save_and_open_html(html, filename):
     """Зберегти HTML і відкрити в браузері"""
     try:
+        if not html:
+            print(f"❌ HTML порожній, не можна зберегти")
+            return False
+
         output_path = Path(filename).absolute()
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html)
 
         print(f"✅ Файл збережено: {output_path}")
+        print(f"   Розмір файлу: {len(html)} символів")
 
-        webbrowser.open(f'file://{output_path}')
+        try:
+            webbrowser.open(f'file://{output_path}')
+        except Exception as web_err:
+            print(f"⚠️  Не вдалось відкрити браузер (GitHub Actions не підтримує): {web_err}")
+
         return True
 
     except Exception as e:
         print(f"❌ Помилка збереження: {e}")
+        import traceback
+        print("📋 Stack trace:")
+        traceback.print_exc()
         return False
 
 
@@ -559,35 +600,53 @@ async def main_async():
     print()
     
     # Завантажити сторінку
+    print("1️⃣  Завантаження сторінки з DTEK...")
     html_content = await fetch_page_with_playwright()
     if not html_content:
+        print("\n⚠️  КРИТИЧНА ПОМИЛКА: Не вдалось завантажити сторінку")
+        print("   Можливі причини:")
+        print("   - Проблема з мережею")
+        print("   - Сервер DTEK недоступний")
+        print("   - Playwright не встановлено або пошкоджено")
         return False
-    
+
     print()
-    
+
     # Витягти дані
+    print("2️⃣  Парсинг HTML...")
     data = extract_schedule_data(html_content)
     if not data:
+        print("\n⚠️  КРИТИЧНА ПОМИЛКА: Не вдалось розпарсити дані")
+        print("   Можливі причини:")
+        print("   - Структура сторінки DTEK змінилась")
+        print("   - JavaScript не виконав (потребує більше часу)")
+        print("   - Сторінка повернула помилку")
         return False
     
     print()
     
     # Отримати графіки для черг
-    print(f"📊 Обробка черг: {', '.join(QUEUE_NAMES.keys())}")
+    print(f"3️⃣  Фільтрування черг...")
+    print(f"   Шукаю черги: {', '.join(QUEUE_NAMES.keys())}")
     queues_data = get_schedules_for_queues(data, QUEUE_NAMES.keys())
-    
+
     if not queues_data:
-        print(f"\n❌ Жодну чергу не знайдено")
-        
+        print(f"\n⚠️  ПОМИЛКА: Жодну чергу не знайдено")
+        print(f"   Розгорнуто шукати черги: {', '.join(QUEUE_NAMES.keys())}")
+
         # Показати доступні черги
         if 'data' in data:
             timestamps = list(data['data'].keys())
             if timestamps:
                 all_queues = list(data['data'][timestamps[0]].keys())
                 queues_display = [q.replace('GPV', '') for q in all_queues[:20]]
-                print("\nДоступні черги:")
-                print(", ".join(queues_display))
-        
+                print(f"\n   📋 Доступні черги на сервері ({len(all_queues)} всього):")
+                print(f"   {', '.join(queues_display)}")
+                if len(all_queues) > 20:
+                    print(f"   ... і ще {len(all_queues) - 20}")
+        else:
+            print("   ℹ️  Структура даних неочікувана, немає 'data' ключа")
+
         return False
     
     print(f"✅ Знайдено: {len(queues_data)} черг")
@@ -595,23 +654,34 @@ async def main_async():
         print(f"   • Черга {queue}: {len(queues_data[queue])} днів")
     
     print()
-    
+
     # Створити HTML
-    print("🎨 Генерація HTML...")
-    kyiv_tz = ZoneInfo('Europe/Kyiv')
-    update_time = datetime.now(kyiv_tz).strftime('%d.%m.%Y %H:%M')
-    dtek_update_time = data.get('update', None)
-    html = generate_minimal_html(queues_data, update_time, dtek_update_time, QUEUE_NAMES)
-    
-    if not html:
-        print("\n❌ Помилка генерації HTML")
+    print("4️⃣  Генерація HTML...")
+    try:
+        kyiv_tz = ZoneInfo('Europe/Kyiv')
+        update_time = datetime.now(kyiv_tz).strftime('%d.%m.%Y %H:%M')
+        dtek_update_time = data.get('update', None)
+        print(f"   Час оновлення: {update_time}")
+        html = generate_minimal_html(queues_data, update_time, dtek_update_time, QUEUE_NAMES)
+
+        if not html:
+            print("\n❌ Помилка генерації HTML (функція повернула None)")
+            return False
+
+        print(f"✅ HTML згенеровано ({len(html)} символів)")
+    except Exception as e:
+        print(f"\n❌ Помилка при генерації HTML: {e}")
+        import traceback
+        print("📋 Stack trace:")
+        traceback.print_exc()
         return False
-    
-    print("✅ HTML згенеровано")
+
     print()
 
     # Зберегти і відкрити локально
+    print("5️⃣  Збереження файлу...")
     if not save_and_open_html(html, OUTPUT_FILE):
+        print("\n❌ Помилка при збереженні файлу")
         return False
 
     print()
