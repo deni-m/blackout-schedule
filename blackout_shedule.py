@@ -269,8 +269,8 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             flex: 1;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            padding: 0 0 0 4px;
+            justify-content: flex-end;
+            padding: 0 4px 0 0;
             font-size: 0.9em;
             font-weight: 600;
             color: white;
