@@ -8,10 +8,19 @@ import json
 import webbrowser
 import asyncio
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from playwright.async_api import async_playwright
+
+# Fix encoding for Windows console
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 # Конфігурація
@@ -33,41 +42,98 @@ GITHUB_PAGES_REPO_PATH = None  # Path to your GitHub Pages repo (e.g., "/path/to
 
 async def fetch_page_with_playwright():
     """Завантажити сторінку через Playwright"""
-    print("🎭 Запускаю Playwright...")    
-    
+    print("🎭 Запускаю Playwright...")
+
     try:
         async with async_playwright() as p:
+            # Launch with better stealth arguments to bypass Incapsula
             browser = await p.chromium.launch(
                 headless=HEADLESS,
                 args=[
                     '--disable-blink-features=AutomationControlled',
                     '--disable-dev-shm-usage',
-                    '--no-sandbox'
+                    '--no-sandbox',
+                    '--disable-web-security',
+                    '--disable-features=IsolateOrigins,site-per-process',
+                    '--disable-setuid-sandbox'
                 ]
             )
-            
+
+            # Better context with more realistic settings
             context = await browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                 locale='uk-UA',
-                timezone_id='Europe/Kiev'
+                timezone_id='Europe/Kiev',
+                extra_http_headers={
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1'
+                }
             )
-            
+
+            # Hide webdriver property
+            await context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+
+                // Hide chrome property
+                window.navigator.chrome = {
+                    runtime: {}
+                };
+
+                // Mock permissions
+                const originalQuery = window.navigator.permissions.query;
+                window.navigator.permissions.query = (parameters) => (
+                    parameters.name === 'notifications' ?
+                        Promise.resolve({ state: Notification.permission }) :
+                        originalQuery(parameters)
+                );
+            """)
+
             page = await context.new_page()
-            
+
             print(f"🌐 Завантаження: {DTEK_URL}")
-            await page.goto(DTEK_URL, wait_until='load', timeout=30000)
+            await page.goto(DTEK_URL, wait_until='load', timeout=60000)
 
-            print("⏳ Чекаю на дані...")
-            await page.wait_for_timeout(4000)
-
-            # Ensure page is fully loaded before getting content
+            print("⏳ Чекаю на дані (обхід Incapsula)...")
+            # Wait for Incapsula challenge to complete and actual content to load
+            # Look for specific content that should be on the DTEK page
             try:
-                await page.wait_for_load_state('networkidle', timeout=5000)
-            except:
-                pass
+                # Try to wait for the main content div or any specific DTEK element
+                await page.wait_for_selector('body', timeout=5000)
+                print("   ✅ Сторінка завантажена")
+
+                # Give more time for Incapsula challenge
+                await page.wait_for_timeout(20000)
+
+                # Check if we're still on Incapsula page
+                page_content = await page.content()
+                if 'Incapsula' in page_content and len(page_content) < 2000:
+                    print("   ⚠️  Incapsula challenge виявлено, чекаю довше...")
+                    await page.wait_for_timeout(30000)
+
+            except Exception as e:
+                print(f"   ⚠️  Помилка очікування: {e}")
+
+            # Try to wait for network idle
+            try:
+                await page.wait_for_load_state('networkidle', timeout=20000)
+                print("   ✅ Networkidle досягнуто")
+            except Exception as e:
+                print(f"   ⚠️  Timeout на networkidle: {e}")
+
+            # Additional wait for JavaScript to execute
+            await page.wait_for_timeout(5000)
 
             html = await page.content()
+
+            # Додаємо інформацію про розмір сторінки для відлагодження
+            print(f"   Отримано HTML розміром: {len(html)} байт")
             
             print("✅ HTML отримано")
             await browser.close()
@@ -128,22 +194,23 @@ def extract_schedule_data(html):
 
 def get_schedules_for_queues(data, queues):
     """Отримати графіки для списку черг"""
-    
+
     if 'data' not in data:
         return None
-    
+
     timestamps = list(data['data'].keys())
     if not timestamps:
         return None
-    
+
     result = {}
-    
+    kyiv_tz = ZoneInfo('Europe/Kyiv')
+
     for queue in queues:
         queue_id = f"GPV{queue}"
         schedules = []
-        
+
         for timestamp in timestamps:
-            date = datetime.fromtimestamp(int(timestamp))
+            date = datetime.fromtimestamp(int(timestamp), tz=kyiv_tz)
             day_data = data['data'][timestamp]
             
             if queue_id in day_data:
@@ -268,27 +335,35 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
         .hour {{
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
-            padding: 0 4px 0 0;
-            font-size: 0.9em;
+            justify-content: center;
+            padding: 4px 2px;
+            gap: 3px;
+            font-size: 0.7em;
             font-weight: 600;
             color: white;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
             min-width: 0;
+            line-height: 1.1;
         }}
 
         .hour:hover {{
             filter: brightness(1.15);
         }}
 
-        .hour::after {{
-            content: attr(data-time);
-            font-size: 0.8em;
+        .hour-start {{
+            font-size: 1.3em;
+            font-weight: 500;
             opacity: 0.9;
-            font-weight: 700;
+        }}
+
+        .hour-end {{
+            font-size: 1.3em;
+            font-weight: 500;
+            opacity: 0.9;
         }}
         
         .status-yes {{
@@ -381,11 +456,11 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             }}
 
             .hour {{
-                font-size: 0.65em;
+                padding: 3px 1px;
             }}
 
-            .hour::after {{
-                font-size: 0.75em;
+            .hour-start, .hour-end {{
+                font-size: 0.9em;
             }}
 
             .separator {{
@@ -426,11 +501,11 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             }}
 
             .hour {{
-                font-size: 0.6em;
+                padding: 2px 1px;
             }}
 
-            .hour::after {{
-                font-size: 0.7em;
+            .hour-start, .hour-end {{
+                font-size: 1.3em;
             }}
 
             .legend {{
@@ -453,31 +528,60 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
 '''
     
     # Додати секції для кожної черги
+    kyiv_tz = ZoneInfo('Europe/Kyiv')
+    today = datetime.now(kyiv_tz).date()
+
     for queue, schedules in queues_data.items():
         html += f'<div class="queue-section">'
-        
+
         for schedule_data in schedules:
             date = schedule_data['date_formatted']
+            date_obj = datetime.strptime(schedule_data['date'], '%Y-%m-%d').date()
             schedule = schedule_data['schedule']
-            
+
             # Статистика
-            power_on = sum(1 for h in range(1, 25) if schedule.get(str(h)) == 'yes')
-            power_off = sum(1 for h in range(1, 25) if schedule.get(str(h)) == 'no')
-            
+            power_on_full = sum(1 for h in range(1, 25) if schedule.get(str(h)) == 'yes')
+            power_off_full = sum(1 for h in range(1, 25) if schedule.get(str(h)) == 'no')
+            partial = sum(1 for h in range(1, 25) if schedule.get(str(h)) in ['first', 'second'])
+
+            # Рахуємо загальний час:
+            # - При 'first'/'second': 30хв БЕЗ світла + 30хв ЗІ світлом
+            total_power_on = power_on_full + (partial * 0.5)
+            total_power_off = power_off_full + (partial * 0.5)
+
+            # Перевірка чи графік попередній (всі години "yes" для майбутньої дати)
+            is_future = date_obj > today
+            is_preliminary = is_future and power_on_full == 24 and power_off_full == 0 and partial == 0
+
+            preliminary_label = ' ⚠️ <span style="color: #ff9800; font-weight: normal;">Попередній графік</span>' if is_preliminary else ''
+
+            # Формуємо рядок статистики
+            # Показуємо десяткове значення тільки якщо є залишок (наприклад, 12.5), інакше ціле число
+            if total_power_on % 1 == 0 and total_power_off % 1 == 0:
+                stats_text = f'✅ {int(total_power_on)}год / ❌ {int(total_power_off)}год'
+            elif total_power_on % 1 == 0:
+                stats_text = f'✅ {int(total_power_on)}год / ❌ {total_power_off:.1f}год'
+            elif total_power_off % 1 == 0:
+                stats_text = f'✅ {total_power_on:.1f}год / ❌ {int(total_power_off)}год'
+            else:
+                stats_text = f'✅ {total_power_on:.1f}год / ❌ {total_power_off:.1f}год'
+
             html += f'''
             <div class="queue-header">
                 <div class="queue-title">Черга {queue} - { (queue_names or {}).get(queue, '').strip() }</div>
-                <div class="date-title">{date} (✅ {power_on}год / ❌ {power_off}год)</div>
+                <div class="date-title">{date} ({stats_text}){preliminary_label}</div>
             </div>
-            
+
             <div class="timeline">
 '''
             
-            # Додати години
+            # Додати години (починаємо з опівночі - 0:00)
             for hour in range(1, 25):
                 status = schedule.get(str(hour), 'unknown')
-                time_display = '00' if hour == 24 else f'{hour:02d}'
-                
+                # Відображаємо години від 0 до 23
+                hour_display_start = hour - 1
+                hour_display_end = hour if hour < 24 else 0
+
                 status_text = {
                     'yes': 'Світло є',
                     'no': 'Відключено',
@@ -485,11 +589,12 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
                     'second': 'Другі 30хв',
                     'unknown': 'Невідомо'
                 }.get(status, 'Невідомо')
-                
+
                 html += f'''
-                <div class="hour status-{status}" 
-                     data-time="{time_display}"
-                     title="{time_display}:00 - {status_text}">
+                <div class="hour status-{status}"
+                     title="{hour_display_start:02d}:00 - {hour_display_end:02d}:00 ({status_text})">
+                    <span class="hour-start">{hour_display_start}</span>
+                    <span class="hour-end">{hour_display_end}</span>
                 </div>
 '''
             
@@ -613,6 +718,15 @@ async def main_async():
 
     print()
 
+    # Зберегти raw HTML для відлагодження (BEFORE parsing, so we can debug)
+    try:
+        html_debug_path = Path("dtek_raw_page.html").absolute()
+        with open(html_debug_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        print(f"✅ Raw HTML збережено для відлагодження: {html_debug_path}")
+    except Exception as e:
+        print(f"⚠️  Не вдалось зберегти raw HTML: {e}")
+
     # Витягти дані
     print("2️⃣  Парсинг HTML...")
     data = extract_schedule_data(html_content)
@@ -622,8 +736,18 @@ async def main_async():
         print("   - Структура сторінки DTEK змінилась")
         print("   - JavaScript не виконав (потребує більше часу)")
         print("   - Сторінка повернула помилку")
+        print(f"   📄 Перевірте raw HTML: {html_debug_path}")
         return False
-    
+
+    # Зберегти JSON дані
+    try:
+        json_path = Path("dtek_schedule_data.json").absolute()
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"✅ JSON дані збережено: {json_path}")
+    except Exception as e:
+        print(f"⚠️  Не вдалось зберегти JSON: {e}")
+
     print()
     
     # Отримати графіки для черг

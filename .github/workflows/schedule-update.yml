@@ -45,7 +45,7 @@ jobs:
 
           # Check if there are changes to commit
           if [ -n "$(git status --porcelain)" ]; then
-            git add dtek_schedule.html
+            git add dtek_schedule.html dtek_schedule_data.json
             git commit -m "Update DTEK schedule - $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
           else
