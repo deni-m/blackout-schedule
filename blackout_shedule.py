@@ -33,7 +33,7 @@ QUEUE_NAMES = {
 }
 OUTPUT_FILE = "dtek_schedule.html"
 DTEK_URL = "https://dtek-krem.com.ua/ua/shutdowns"
-HEADLESS = True
+HEADLESS = True  # Set to False for local testing if Incapsula blocks headless mode
 
 # GitHub Pages configuration
 GITHUB_PAGES_ENABLED = False  # Set to True to enable GitHub Pages push
@@ -347,7 +347,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             transition: all 0.2s;
             position: relative;
             min-width: 0;
-            line-height: 1.1;
+            line-height: 1.5;
         }}
 
         .hour:hover {{
@@ -355,13 +355,13 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
         }}
 
         .hour-start {{
-            font-size: 1.3em;
+            font-size: 1.2em;
             font-weight: 500;
             opacity: 0.9;
         }}
 
         .hour-end {{
-            font-size: 1.3em;
+            font-size: 1.2em;
             font-weight: 500;
             opacity: 0.9;
         }}
@@ -505,7 +505,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             }}
 
             .hour-start, .hour-end {{
-                font-size: 1.3em;
+                font-size: 0.8em;
             }}
 
             .legend {{
