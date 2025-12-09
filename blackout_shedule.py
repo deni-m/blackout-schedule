@@ -9,7 +9,7 @@ import webbrowser
 import asyncio
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from playwright.async_api import async_playwright
@@ -627,7 +627,324 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
     </div>
 </body>
 </html>'''
-    
+
+    return html
+
+
+def generate_all_groups_html(data, update_time, dtek_update_time=None):
+    """Створити HTML з усіма групами у простому форматі"""
+
+    if not data or 'data' not in data:
+        return None
+
+    kyiv_tz = ZoneInfo('Europe/Kyiv')
+    today = datetime.now(kyiv_tz).date()
+    tomorrow = today + timedelta(days=1)
+
+    # Отримати всі доступні черги
+    timestamps = list(data['data'].keys())
+    if not timestamps:
+        return None
+
+    # Створити словник: timestamp_str -> (date_obj, schedules_dict)
+    dates_data = []
+    for timestamp in timestamps:
+        date_obj = datetime.fromtimestamp(int(timestamp), tz=kyiv_tz).date()
+        dates_data.append((date_obj, data['data'][timestamp]))
+
+    # Сортувати за датою
+    dates_data.sort(key=lambda x: x[0])
+
+    # HTML початок
+    html = f'''<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTEK - Всі групи</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+        }}
+
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+        }}
+
+        .header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }}
+
+        .title {{
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }}
+
+        .header-info {{
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: flex-end;
+            font-size: 0.85em;
+        }}
+
+        .update-time {{
+            color: #666;
+            font-size: 0.9em;
+        }}
+
+        .date-section {{
+            margin-bottom: 30px;
+        }}
+
+        .date-section-title {{
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }}
+
+        .hours-row {{
+            margin-bottom: 4px;
+            background: transparent;
+        }}
+
+        .hours-row:hover {{
+            background: transparent;
+        }}
+
+        .hours-row .hour {{
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 0.75em;
+            padding: 2px;
+            gap: 2px;
+        }}
+
+        .hour-label-start {{
+            font-weight: 600;
+        }}
+
+        .hour-label-end {{
+            font-weight: 400;
+            font-size: 0.9em;
+        }}
+
+        .group-row {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+        }}
+
+        .group-row:hover {{
+            background: #f9f9f9;
+        }}
+
+        .group-number {{
+            min-width: 60px;
+            font-weight: 600;
+            color: #444;
+            font-size: 0.95em;
+        }}
+
+        .timeline {{
+            display: flex;
+            flex: 1;
+            height: 35px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            gap: 1px;
+            background: #f0f0f0;
+        }}
+
+        .hour {{
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: 600;
+            color: white;
+            min-width: 0;
+        }}
+
+        .status-yes {{
+            background: #4caf50;
+        }}
+
+        .status-no {{
+            background: #f44336;
+        }}
+
+        .status-first {{
+            background: #ff9800;
+        }}
+
+        .status-second {{
+            background: #ff9800;
+        }}
+
+        .status-unknown {{
+            background: #9e9e9e;
+        }}
+
+        @media (max-width: 768px) {{
+            .group-number {{
+                min-width: 50px;
+                font-size: 0.85em;
+            }}
+
+            .timeline {{
+                height: 30px;
+            }}
+
+            .hours-row .hour {{
+                font-size: 0.65em;
+            }}
+        }}
+
+        @media (max-width: 480px) {{
+            .group-row {{
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }}
+
+            .hours-row {{
+                display: none;
+            }}
+
+            .timeline {{
+                width: 100%;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">⚡ DTEK - Всі групи</div>
+            <div class="header-info">
+                <div class="update-time">Згенеровано: {update_time}</div>
+                {f'<div class="update-time">Дата оновлення ДТЕК: {dtek_update_time}</div>' if dtek_update_time else ''}
+            </div>
+        </div>
+'''
+
+    # Додати секції для кожної дати
+    for target_date, date_label in [(today, 'Сьогодні'), (tomorrow, 'Завтра')]:
+        # Знайти дані для цієї дати
+        schedules = None
+        for date_obj, date_schedules in dates_data:
+            if date_obj == target_date:
+                schedules = date_schedules
+                break
+
+        if not schedules:
+            continue
+
+        date_formatted = target_date.strftime('%d.%m.%Y')
+
+        html += f'''
+        <div class="date-section">
+            <div class="date-section-title">{date_label} ({date_formatted})</div>
+            <div class="group-row hours-row">
+                <div class="group-number"></div>
+                <div class="timeline">
+'''
+
+        # Додати мітки годин як перший рядок
+        for hour in range(1, 25):
+            hour_start = hour - 1
+            hour_end = hour if hour < 24 else 0
+            html += f'''
+                    <div class="hour hour-label">
+                        <span class="hour-label-start">{hour_start}</span>
+                        <span class="hour-label-end">{hour_end}</span>
+                    </div>
+'''
+
+        html += '''
+                </div>
+            </div>
+'''
+
+        # Отримати всі групи та відсортувати
+        queue_ids = sorted(schedules.keys())
+
+        for queue_id in queue_ids:
+            schedule = schedules[queue_id]
+            # Видалити префікс GPV для відображення
+            display_id = queue_id.replace('GPV', '')
+
+            html += f'''
+            <div class="group-row">
+                <div class="group-number">{display_id}</div>
+                <div class="timeline">
+'''
+
+            # Додати години
+            for hour in range(1, 25):
+                status = schedule.get(str(hour), 'unknown')
+                hour_start = hour - 1
+                hour_end = hour if hour < 24 else 0
+
+                status_text = {
+                    'yes': 'Світло є',
+                    'no': 'Відключено',
+                    'first': 'Перші 30хв',
+                    'second': 'Другі 30хв',
+                    'unknown': 'Невідомо'
+                }.get(status, 'Невідомо')
+
+                html += f'''
+                    <div class="hour status-{status}"
+                         title="{hour_start:02d}:00-{hour_end:02d}:00 ({status_text})"></div>
+'''
+
+            html += '''
+                </div>
+            </div>
+'''
+
+        html += '''
+        </div>
+'''
+
+    html += '''
+    </div>
+</body>
+</html>'''
+
     return html
 
 
@@ -808,6 +1125,26 @@ async def main_async():
     if not save_and_open_html(html, OUTPUT_FILE):
         print("\n❌ Помилка при збереженні файлу")
         return False
+
+    print()
+
+    # Створити та зберегти сторінку з усіма групами
+    print("6️⃣  Генерація сторінки з усіма групами...")
+    try:
+        html_all = generate_all_groups_html(data, update_time, dtek_update_time)
+
+        if html_all:
+            all_groups_file = "dtek_schedule_all.html"
+            if save_and_open_html(html_all, all_groups_file):
+                print(f"✅ Сторінка з усіма групами збережена")
+            else:
+                print(f"⚠️  Не вдалось зберегти сторінку з усіма групами")
+        else:
+            print("⚠️  Не вдалось згенерувати HTML з усіма групами")
+    except Exception as e:
+        print(f"⚠️  Помилка при генерації сторінки з усіма групами: {e}")
+        import traceback
+        traceback.print_exc()
 
     print()
 
