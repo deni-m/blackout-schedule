@@ -239,6 +239,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DTEK Графік</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>⚡</text></svg>">
     <style>
         * {{
             margin: 0;
@@ -325,11 +326,13 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             display: flex;
             height: 50px;
             border-radius: 4px;
-            overflow: hidden;
+            overflow: visible;
             border: 1px solid #ddd;
-            margin-bottom: 15px;
+            margin-bottom: 30px;
+            margin-top: 25px;
             gap: 1px;
             background: #f0f0f0;
+            position: relative;
         }}
 
         .hour {{
@@ -381,7 +384,67 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
         .status-unknown {{
             background: #9e9e9e;
         }}
-        
+
+        /* Current time indicator styles */
+        .hour.current-hour {{
+            box-shadow: 0 0 0 2px #1a1a1a, inset 0 0 0 200px rgba(255, 255, 255, 0.5);
+            position: relative;
+            z-index: 10;
+        }}
+
+        .hour.current-hour::after {{
+            content: '▲';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            color: #1a1a1a;
+            filter: drop-shadow(0 2px 3px rgba(255,255,255,0.8));
+            animation: pulse 2s infinite;
+        }}
+
+        @keyframes pulse {{
+            0%, 100% {{
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }}
+            50% {{
+                opacity: 0.6;
+                transform: translateX(-50%) translateY(-3px);
+            }}
+        }}
+
+        .outage-block-label {{
+            position: absolute;
+            top: -22px;
+            background: transparent;
+            color: #f44336;
+            border: 2px solid #f44336;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: 700;
+            z-index: 5;
+            white-space: nowrap;
+            pointer-events: none;
+        }}
+
+        .power-on-label {{
+            position: absolute;
+            top: -22px;
+            background: transparent;
+            color: #4caf50;
+            border: 2px solid #4caf50;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: 700;
+            z-index: 5;
+            white-space: nowrap;
+            pointer-events: none;
+        }}
+
         .legend {{
             display: flex;
             gap: 15px;
@@ -592,6 +655,8 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
 
                 html += f'''
                 <div class="hour status-{status}"
+                     data-hour="{hour_display_start}"
+                     data-date="{schedule_data['date']}"
                      title="{hour_display_start:02d}:00 - {hour_display_end:02d}:00 ({status_text})">
                     <span class="hour-start">{hour_display_start}</span>
                     <span class="hour-end">{hour_display_end}</span>
@@ -625,6 +690,148 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             </div>
         </div>
     </div>
+    <script>
+        // Function to add block labels
+        function addBlockLabels() {
+            // Get all timelines
+            const timelines = document.querySelectorAll('.timeline');
+            console.log('Found timelines:', timelines.length);
+
+            timelines.forEach((timeline, timelineIndex) => {
+                // Remove existing labels
+                timeline.querySelectorAll('.outage-block-label, .power-on-label').forEach(label => label.remove());
+
+                // Get all hour cells in this timeline
+                const hours = Array.from(timeline.querySelectorAll('.hour'));
+
+                // Function to find blocks based on classifier
+                function findBlocks(classifier) {
+                    let blocks = [];
+                    let currentBlock = null;
+
+                    hours.forEach((hour, index) => {
+                        const matches = classifier(hour);
+
+                        if (matches) {
+                            if (!currentBlock) {
+                                currentBlock = { start: index, end: index, cells: [hour] };
+                            } else {
+                                currentBlock.end = index;
+                                currentBlock.cells.push(hour);
+                            }
+                        } else {
+                            if (currentBlock) {
+                                blocks.push(currentBlock);
+                                currentBlock = null;
+                            }
+                        }
+                    });
+
+                    if (currentBlock) {
+                        blocks.push(currentBlock);
+                    }
+
+                    return blocks;
+                }
+
+                // Find outage blocks (red + orange)
+                const outageBlocks = findBlocks(hour =>
+                    hour.classList.contains('status-no') ||
+                    hour.classList.contains('status-first') ||
+                    hour.classList.contains('status-second')
+                );
+
+                // Find power-on blocks (green)
+                const powerOnBlocks = findBlocks(hour => hour.classList.contains('status-yes'));
+
+                console.log(`Timeline ${timelineIndex}: Found ${outageBlocks.length} outage blocks, ${powerOnBlocks.length} power-on blocks`);
+
+                // Function to create label for a block
+                function createLabel(block, isOutage) {
+                    // Calculate duration
+                    let duration = 0;
+                    block.cells.forEach(cell => {
+                        if (cell.classList.contains('status-no') || cell.classList.contains('status-yes')) {
+                            duration += 1;
+                        } else if (cell.classList.contains('status-first') || cell.classList.contains('status-second')) {
+                            duration += 0.5;
+                        }
+                    });
+
+                    const firstCell = block.cells[0];
+                    const lastCell = block.cells[block.cells.length - 1];
+
+                    // Calculate position
+                    const firstRect = firstCell.getBoundingClientRect();
+                    const lastRect = lastCell.getBoundingClientRect();
+                    const timelineRect = timeline.getBoundingClientRect();
+
+                    const left = firstRect.left - timelineRect.left;
+                    const width = lastRect.right - firstRect.left;
+
+                    // Create label
+                    const label = document.createElement('div');
+                    label.className = isOutage ? 'outage-block-label' : 'power-on-label';
+                    label.textContent = duration % 1 === 0 ? duration : duration.toFixed(1);
+                    label.style.left = `${left}px`;
+                    label.style.width = `${width}px`;
+                    label.style.textAlign = 'center';
+
+                    timeline.appendChild(label);
+                }
+
+                // Create labels for outage blocks
+                outageBlocks.forEach(block => createLabel(block, true));
+
+                // Create labels for power-on blocks
+                powerOnBlocks.forEach(block => createLabel(block, false));
+            });
+        }
+
+        // Function to highlight the current hour
+        function highlightCurrentHour() {
+            // Get current time in user's local timezone
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+            // Remove previous highlights
+            document.querySelectorAll('.hour.current-hour').forEach(el => {
+                el.classList.remove('current-hour');
+            });
+
+            // Find and highlight ALL current hour cells (for all queues on the same day)
+            const currentCells = document.querySelectorAll(`.hour[data-hour="${currentHour}"][data-date="${currentDate}"]`);
+            if (currentCells.length > 0) {
+                currentCells.forEach(cell => {
+                    cell.classList.add('current-hour');
+                });
+                // Scroll to the first one
+                currentCells[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
+        }
+
+        // Run on page load
+        window.addEventListener('load', () => {
+            // Use requestAnimationFrame to ensure layout is complete
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    addBlockLabels();
+                    highlightCurrentHour();
+                });
+            });
+        });
+
+        // Update every minute
+        setInterval(highlightCurrentHour, 60000);
+
+        // Re-calculate labels on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(addBlockLabels, 100);
+        });
+    </script>
 </body>
 </html>'''
 
@@ -662,6 +869,7 @@ def generate_all_groups_html(data, update_time, dtek_update_time=None):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DTEK - Всі групи</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>⚡</text></svg>">
     <style>
         * {{
             margin: 0;
