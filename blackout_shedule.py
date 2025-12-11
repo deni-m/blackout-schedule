@@ -422,7 +422,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             color: #f44336;
             border: 2px solid #f44336;
             padding: 2px 6px;
-            border-radius: 10px;
+            border-radius: 10px 10px 0 0;
             font-size: 0.75em;
             font-weight: 700;
             z-index: 5;
@@ -437,7 +437,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             color: #4caf50;
             border: 2px solid #4caf50;
             padding: 2px 6px;
-            border-radius: 10px;
+            border-radius: 10px 10px 0 0;
             font-size: 0.75em;
             font-weight: 700;
             z-index: 5;
@@ -741,8 +741,12 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
                     hour.classList.contains('status-second')
                 );
 
-                // Find power-on blocks (green)
-                const powerOnBlocks = findBlocks(hour => hour.classList.contains('status-yes'));
+                // Find power-on blocks (green + partial with power)
+                const powerOnBlocks = findBlocks(hour =>
+                    hour.classList.contains('status-yes') ||
+                    hour.classList.contains('status-first') ||
+                    hour.classList.contains('status-second')
+                );
 
                 console.log(`Timeline ${timelineIndex}: Found ${outageBlocks.length} outage blocks, ${powerOnBlocks.length} power-on blocks`);
 
@@ -766,8 +770,43 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
                     const lastRect = lastCell.getBoundingClientRect();
                     const timelineRect = timeline.getBoundingClientRect();
 
-                    const left = firstRect.left - timelineRect.left;
-                    const width = lastRect.right - firstRect.left;
+                    // Calculate left position: adjust if first cell is partial
+                    let left;
+                    const firstCellWidth = firstRect.width;
+                    if (isOutage) {
+                        // For outage blocks: status-second means outage starts at middle
+                        if (firstCell.classList.contains('status-second')) {
+                            left = (firstRect.left - timelineRect.left) + (firstCellWidth / 2);
+                        } else {
+                            left = firstRect.left - timelineRect.left;
+                        }
+                    } else {
+                        // For power-on blocks: status-first means power starts at middle
+                        if (firstCell.classList.contains('status-first')) {
+                            left = (firstRect.left - timelineRect.left) + (firstCellWidth / 2);
+                        } else {
+                            left = firstRect.left - timelineRect.left;
+                        }
+                    }
+
+                    // Calculate width: adjust if last cell is partial
+                    let width;
+                    const lastCellWidth = lastRect.width;
+                    if (isOutage) {
+                        // For outage blocks: status-first means outage ends at middle
+                        if (lastCell.classList.contains('status-first')) {
+                            width = (lastRect.left - timelineRect.left) + (lastCellWidth / 2) - left;
+                        } else {
+                            width = lastRect.right - timelineRect.left - left;
+                        }
+                    } else {
+                        // For power-on blocks: status-second means power ends at middle
+                        if (lastCell.classList.contains('status-second')) {
+                            width = (lastRect.left - timelineRect.left) + (lastCellWidth / 2) - left;
+                        } else {
+                            width = lastRect.right - timelineRect.left - left;
+                        }
+                    }
 
                     // Create label
                     const label = document.createElement('div');
