@@ -404,6 +404,22 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             animation: pulse 2s infinite;
         }}
 
+        .hour.current-hour .current-hour-eta {{
+            position: absolute;
+            bottom: -44px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.95em;
+            color: #1a1a1a;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            padding: 3px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            z-index: 11;
+        }}
+
         @keyframes pulse {{
             0%, 100% {{
                 opacity: 1;
@@ -593,6 +609,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
     # Додати секції для кожної черги
     kyiv_tz = ZoneInfo('Europe/Kyiv')
     today = datetime.now(kyiv_tz).date()
+    tomorrow = today + timedelta(days=1)
 
     for queue, schedules in queues_data.items():
         html += f'<div class="queue-section">'
@@ -601,6 +618,10 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             date = schedule_data['date_formatted']
             date_obj = datetime.strptime(schedule_data['date'], '%Y-%m-%d').date()
             schedule = schedule_data['schedule']
+
+            # Show only today and tomorrow
+            if date_obj < today or date_obj > tomorrow:
+                continue
 
             # Статистика
             power_on_full = sum(1 for h in range(1, 25) if schedule.get(str(h)) == 'yes')
@@ -833,10 +854,71 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             const now = new Date();
             const currentHour = now.getHours();
             const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const currentHalf = now.getMinutes() >= 30 ? 1 : 0;
+            const minutesIntoHalf = now.getMinutes() % 30;
+
+            function getHalfStatus(cell, halfIndex) {
+                if (!cell) return 'unknown';
+                if (cell.classList.contains('status-yes')) return 'on';
+                if (cell.classList.contains('status-no')) return 'off';
+                if (cell.classList.contains('status-first')) return halfIndex === 0 ? 'off' : 'on';
+                if (cell.classList.contains('status-second')) return halfIndex === 0 ? 'on' : 'off';
+                return 'unknown';
+            }
+
+            function formatDuration(totalMinutes) {
+                if (totalMinutes <= 0 || !Number.isFinite(totalMinutes)) return '0хв';
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                if (hours > 0 && minutes > 0) return `${hours}год ${minutes}хв`;
+                if (hours > 0) return `${hours}год`;
+                return `${minutes}хв`;
+            }
+
+            function updateEtaLabel(currentCell) {
+                const timeline = currentCell.closest('.timeline');
+                if (!timeline) return;
+
+                const hourCells = Array.from(timeline.querySelectorAll(`.hour[data-date="${currentDate}"]`));
+                if (hourCells.length !== 24) return;
+
+                const currentStatus = getHalfStatus(currentCell, currentHalf);
+                if (currentStatus === 'unknown') return;
+
+                const currentIndex = currentHour * 2 + currentHalf;
+                const currentOffset = currentIndex * 30 + minutesIntoHalf;
+                let minutesToChange = null;
+
+                for (let i = currentIndex + 1; i < 48; i++) {
+                    const hourIdx = Math.floor(i / 2);
+                    const halfIdx = i % 2;
+                    const status = getHalfStatus(hourCells[hourIdx], halfIdx);
+                    if (status === 'unknown') break;
+                    if (status !== currentStatus) {
+                        minutesToChange = (i * 30) - currentOffset;
+                        break;
+                    }
+                }
+
+                const label = document.createElement('div');
+                label.className = 'current-hour-eta';
+
+                if (minutesToChange === null) {
+                    label.textContent = 'До кінця дня';
+                } else {
+                    label.textContent = formatDuration(minutesToChange);
+                }
+
+                currentCell.appendChild(label);
+            }
 
             // Remove previous highlights
             document.querySelectorAll('.hour.current-hour').forEach(el => {
                 el.classList.remove('current-hour');
+            });
+
+            document.querySelectorAll('.current-hour-eta').forEach(el => {
+                el.remove();
             });
 
             // Find and highlight ALL current hour cells (for all queues on the same day)
@@ -844,6 +926,7 @@ def generate_minimal_html(queues_data, update_time, dtek_update_time=None, queue
             if (currentCells.length > 0) {
                 currentCells.forEach(cell => {
                     cell.classList.add('current-hour');
+                    updateEtaLabel(cell);
                 });
                 // Scroll to the first one
                 currentCells[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
