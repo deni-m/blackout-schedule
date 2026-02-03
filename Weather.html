@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>16-Day Weather Forecast (GFS)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    #top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px 20px;
+      background: #f0f0f0;
+    }
+
+    #chart-container {
+      height: 85vh;
+      width: 100vw;
+      box-sizing: border-box;
+      padding: 20px;
+    }
+
+
+    h2 {
+      margin-left: 20px;
+      font-size: 20px;
+    }
+
+    select {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="top-bar">
+    <label for="location">Location:&nbsp;</label>
+    <select id="location">
+      <option value="Kyiv">Kyiv</option>
+      <option value="Yasinia">Yasinia</option>
+      <option value="Dragobrat">Dragobrat</option>
+      <option value="Bukovel">Bukovel</option>
+	  <option value="Odesa">Odesa</option>
+	  <option value="Voznesensk">Voznesensk</option>
+	  <option value="Yenot">Yenot</option>
+    </select>
+    <h2 id="chart-title">Kyiv 16-Day Weather Forecast (GFS)</h2>
+  </div>
+
+  <div id="chart-container">
+    <canvas id="forecastChart"></canvas>
+  </div>
+
+  <script>
+    const locations = {
+      Kyiv: { lat: 50.4328, lon: 30.46875 },
+      Yasinia: { lat: 48.2742, lon: 24.3686 },
+      Dragobrat: { lat: 48.1826, lon: 24.3811 },
+      Bukovel: { lat: 48.3557, lon: 24.4193 },
+	  Odesa: { lat: 46.4825, lon: 30.7233 },
+	  Voznesensk: { lat: 47.5647, lon: 31.3364 },
+	  Yenot: { "lat": 48.1733153, "lon": 24.8654665 }
+    };
+
+    let chart; // Store chart instance
+
+    async function fetchWeather(locationName) {
+      const loc = locations[locationName];
+
+      // Запит на GFS
+      const gfsUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=Europe/Kiev&forecast_days=16`;
+      const gfsRes = await fetch(gfsUrl);
+      const gfsData = await gfsRes.json();
+
+      // Запит на ECMWF
+      const ecmwfUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe/Kiev&forecast_days=16`;
+      const ecmwfRes = await fetch(ecmwfUrl);
+      const ecmwfData = await ecmwfRes.json();
+
+      const dates = gfsData.daily.time;
+      const tempMaxGFS = gfsData.daily.temperature_2m_max;
+      const tempMinGFS = gfsData.daily.temperature_2m_min;
+      const precipGFS = gfsData.daily.precipitation_sum;
+      const precipProb = gfsData.daily.precipitation_probability_max;
+
+      const tempMaxECMWF = ecmwfData.daily.temperature_2m_max;
+      const tempMinECMWF = ecmwfData.daily.temperature_2m_min;
+      const precipECMWF = ecmwfData.daily.precipitation_sum;
+
+      const labelColors = [];
+      const daysShort = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+      const formattedDates = dates.map(date => {
+        const d = new Date(date);
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        labelColors.push(isWeekend ? 'red' : '#666');
+
+        const day = daysShort[d.getDay()];
+
+        return [day, date];  // !!! Повертаємо масив із двох рядків
+      });
+
+
+
+
+      function getWeatherIcon(temp, prob) {
+        if (temp < 0) return "❄️";
+        if (prob >= 70) return "🌧️";
+        if (prob >= 40) return "🌦️";
+        if (prob >= 20) return "🌤️";
+        return "☀️";
+      }
+
+      const ctx = document.getElementById("forecastChart").getContext("2d");
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: formattedDates,
+          datasets: [
+            // GFS Max Temp
+            {
+              type: 'line',
+              label: 'GFS Max Temp (°C)',
+              data: tempMaxGFS,
+              borderColor: 'red',
+              backgroundColor: 'red',
+              yAxisID: 'y',
+              tension: 0.3
+            },
+            // GFS Min Temp
+            {
+              type: 'line',
+              label: 'GFS Min Temp (°C)',
+              data: tempMinGFS,
+              borderColor: 'blue',
+              backgroundColor: 'blue',
+              yAxisID: 'y',
+              tension: 0.3
+            },
+            // ECMWF Max Temp (штрихова)
+            {
+              type: 'line',
+              label: 'ECMWF Max Temp (°C)',
+              data: tempMaxECMWF,
+              borderColor: 'rgba(255, 0, 0, 0.5)',
+              backgroundColor: 'rgba(255, 0, 0, 0.5)',
+              borderDash: [5, 5],
+              yAxisID: 'y',
+              tension: 0.3
+            },
+            // ECMWF Min Temp (штрихова)
+            {
+              type: 'line',
+              label: 'ECMWF Min Temp (°C)',
+              data: tempMinECMWF,
+              borderColor: 'rgba(0, 0, 255, 0.5)',
+              backgroundColor: 'rgba(0, 0, 255, 0.5)',
+              borderDash: [5, 5],
+              yAxisID: 'y',
+              tension: 0.3
+            },
+            // GFS Precipitation
+            {
+              type: 'bar',
+              label: 'GFS Precipitation (mm)',
+              data: precipGFS,
+              backgroundColor: 'rgba(54, 162, 235, 0.6)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+              yAxisID: 'y2'
+            },
+            // ECMWF Precipitation
+            {
+              type: 'bar',
+              label: 'ECMWF Precipitation (mm)',
+              data: precipECMWF,
+              backgroundColor: 'rgba(153, 204, 255, 0.6)', // світліший синій
+              borderColor: 'rgba(153, 204, 255, 1)',
+              borderWidth: 1,
+              yAxisID: 'y2'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top'
+            },
+            datalabels: {
+              display: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                return label.includes("Temp") || label.includes("Precipitation (mm)");
+              },
+              formatter: function (value, context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                if (label.includes("Temp")) {
+                  return value.toFixed(1) + "°";
+                }
+                if (label.includes("GFS Precipitation")) {
+                  const prob = precipProb[context.dataIndex];
+                  const temp = tempMaxGFS[context.dataIndex];
+                  const icon = getWeatherIcon(temp, prob);
+                  return prob > 0 ? `${icon} ${prob}%` : icon;
+                }
+
+                if (label.includes("ECMWF Precipitation")) {
+                  const precipAmount = precipECMWF[context.dataIndex];
+                  if (precipAmount > 0) {
+                    return "🌧️";
+                  } else {
+                    return "☀️";
+                  }
+                }
+
+                return null;
+              },
+              align: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                if (label.includes("Temp")) return "top";
+                if (label.includes("Precipitation")) return "end";
+                return "center";
+              },
+              anchor: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                if (label.includes("Temp")) return "end";
+                if (label.includes("Precipitation")) return "start";
+                return "center";
+              },
+              offset: function (context) {
+                if (context.chart.data.datasets[context.datasetIndex].label.includes("Precipitation")) return 5;
+                return 8;
+              },
+              color: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                if (label.includes("GFS Max")) return "red";
+                if (label.includes("GFS Min")) return "blue";
+                if (label.includes("ECMWF Max")) return "rgba(255,0,0,0.5)";
+                if (label.includes("ECMWF Min")) return "rgba(0,0,255,0.5)";
+                if (label.includes("GFS Precipitation")) return "#000";
+                if (label.includes("ECMWF Precipitation")) return "#000";
+                return "#000";
+              },
+              font: {
+                weight: 'bold'
+              }
+            }
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Temperature (°C)'
+              },
+              ticks: {
+                font: {
+                  size: 12 // Зменшуємо шрифт для осі Y (температура)
+                }
+              },
+              grid: {
+                color: function (context) {
+                  return context.tick.value === 0 ? '#007BFF' : Chart.defaults.borderColor;
+                },
+                lineWidth: function (context) {
+                  return context.tick.value === 0 ? 3 : 1;
+                }
+              }
+            },
+            y2: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Precipitation (mm)'
+              },
+              ticks: {
+                font: {
+                  size: 12 // Зменшуємо шрифт для осі Y2 (опади)
+                }
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+            ,
+            x: {
+              ticks: {
+                font: {
+                  size: 12
+                },
+                color: function (context) {
+                  return labelColors[context.index];
+                }
+              },
+              grid: {
+                display: true
+              }
+            }
+
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      document.getElementById("chart-title").textContent = `${locationName} 16-Day Weather Forecast (GFS + ECMWF)`;
+
+    }
+
+    fetchWeather("Kyiv"); // Initial load
+
+    document.getElementById("location").addEventListener("change", async (e) => {
+      await fetchWeather(e.target.value);
+    });
+
+
+  </script>
+</body>
+
+</html>
