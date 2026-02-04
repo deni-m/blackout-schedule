@@ -169,6 +169,22 @@
             animation: pulse 2s infinite;
         }
 
+        .hour.current-hour .current-hour-eta {
+            position: absolute;
+            bottom: -44px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.95em;
+            color: #1a1a1a;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            padding: 3px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            z-index: 11;
+        }
+
         @keyframes pulse {
             0%, 100% {
                 opacity: 1;
@@ -349,215 +365,14 @@
         <div class="header">
             <div class="title">⚡ DTEK Графік відключень</div>
             <div class="header-info">
-                <div class="update-time">Згенеровано: 03.02.2026 19:33</div>
-                <div class="dtek-update-time">Дата оновлення ДТЕК: 03.02.2026 19:09</div>
+                <div class="update-time">Згенеровано: 04.02.2026 12:23</div>
+                <div class="dtek-update-time">Дата оновлення ДТЕК: 04.02.2026 11:45</div>
             </div>
         </div>
 <div class="queue-section">
             <div class="queue-header">
                 <div class="queue-title">Черга 6.1 - Бобриця</div>
-                <div class="date-title">03.02.2026 (✅ 9.5год / ❌ 14.5год)</div>
-            </div>
-
-            <div class="timeline">
-
-                <div class="hour status-yes"
-                     data-hour="0"
-                     data-date="2026-02-03"
-                     title="00:00 - 01:00 (Світло є)">
-                    <span class="hour-start">0</span>
-                    <span class="hour-end">1</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="1"
-                     data-date="2026-02-03"
-                     title="01:00 - 02:00 (Світло є)">
-                    <span class="hour-start">1</span>
-                    <span class="hour-end">2</span>
-                </div>
-
-                <div class="hour status-second"
-                     data-hour="2"
-                     data-date="2026-02-03"
-                     title="02:00 - 03:00 (Другі 30хв)">
-                    <span class="hour-start">2</span>
-                    <span class="hour-end">3</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="3"
-                     data-date="2026-02-03"
-                     title="03:00 - 04:00 (Відключено)">
-                    <span class="hour-start">3</span>
-                    <span class="hour-end">4</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="4"
-                     data-date="2026-02-03"
-                     title="04:00 - 05:00 (Відключено)">
-                    <span class="hour-start">4</span>
-                    <span class="hour-end">5</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="5"
-                     data-date="2026-02-03"
-                     title="05:00 - 06:00 (Відключено)">
-                    <span class="hour-start">5</span>
-                    <span class="hour-end">6</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="6"
-                     data-date="2026-02-03"
-                     title="06:00 - 07:00 (Відключено)">
-                    <span class="hour-start">6</span>
-                    <span class="hour-end">7</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="7"
-                     data-date="2026-02-03"
-                     title="07:00 - 08:00 (Відключено)">
-                    <span class="hour-start">7</span>
-                    <span class="hour-end">8</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="8"
-                     data-date="2026-02-03"
-                     title="08:00 - 09:00 (Відключено)">
-                    <span class="hour-start">8</span>
-                    <span class="hour-end">9</span>
-                </div>
-
-                <div class="hour status-first"
-                     data-hour="9"
-                     data-date="2026-02-03"
-                     title="09:00 - 10:00 (Перші 30хв)">
-                    <span class="hour-start">9</span>
-                    <span class="hour-end">10</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="10"
-                     data-date="2026-02-03"
-                     title="10:00 - 11:00 (Світло є)">
-                    <span class="hour-start">10</span>
-                    <span class="hour-end">11</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="11"
-                     data-date="2026-02-03"
-                     title="11:00 - 12:00 (Світло є)">
-                    <span class="hour-start">11</span>
-                    <span class="hour-end">12</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="12"
-                     data-date="2026-02-03"
-                     title="12:00 - 13:00 (Світло є)">
-                    <span class="hour-start">12</span>
-                    <span class="hour-end">13</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="13"
-                     data-date="2026-02-03"
-                     title="13:00 - 14:00 (Відключено)">
-                    <span class="hour-start">13</span>
-                    <span class="hour-end">14</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="14"
-                     data-date="2026-02-03"
-                     title="14:00 - 15:00 (Відключено)">
-                    <span class="hour-start">14</span>
-                    <span class="hour-end">15</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="15"
-                     data-date="2026-02-03"
-                     title="15:00 - 16:00 (Відключено)">
-                    <span class="hour-start">15</span>
-                    <span class="hour-end">16</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="16"
-                     data-date="2026-02-03"
-                     title="16:00 - 17:00 (Відключено)">
-                    <span class="hour-start">16</span>
-                    <span class="hour-end">17</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="17"
-                     data-date="2026-02-03"
-                     title="17:00 - 18:00 (Відключено)">
-                    <span class="hour-start">17</span>
-                    <span class="hour-end">18</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="18"
-                     data-date="2026-02-03"
-                     title="18:00 - 19:00 (Відключено)">
-                    <span class="hour-start">18</span>
-                    <span class="hour-end">19</span>
-                </div>
-
-                <div class="hour status-no"
-                     data-hour="19"
-                     data-date="2026-02-03"
-                     title="19:00 - 20:00 (Відключено)">
-                    <span class="hour-start">19</span>
-                    <span class="hour-end">20</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="20"
-                     data-date="2026-02-03"
-                     title="20:00 - 21:00 (Світло є)">
-                    <span class="hour-start">20</span>
-                    <span class="hour-end">21</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="21"
-                     data-date="2026-02-03"
-                     title="21:00 - 22:00 (Світло є)">
-                    <span class="hour-start">21</span>
-                    <span class="hour-end">22</span>
-                </div>
-
-                <div class="hour status-yes"
-                     data-hour="22"
-                     data-date="2026-02-03"
-                     title="22:00 - 23:00 (Світло є)">
-                    <span class="hour-start">22</span>
-                    <span class="hour-end">23</span>
-                </div>
-
-                <div class="hour status-second"
-                     data-hour="23"
-                     data-date="2026-02-03"
-                     title="23:00 - 00:00 (Другі 30хв)">
-                    <span class="hour-start">23</span>
-                    <span class="hour-end">0</span>
-                </div>
-
-            </div>
-
-            <div class="queue-header">
-                <div class="queue-title">Черга 6.1 - Бобриця</div>
-                <div class="date-title">04.02.2026 (✅ 7год / ❌ 17год)</div>
+                <div class="date-title">04.02.2026 (✅ 8.5год / ❌ 15.5год)</div>
             </div>
 
             <div class="timeline">
@@ -626,18 +441,18 @@
                     <span class="hour-end">8</span>
                 </div>
 
-                <div class="hour status-yes"
+                <div class="hour status-no"
                      data-hour="8"
                      data-date="2026-02-04"
-                     title="08:00 - 09:00 (Світло є)">
+                     title="08:00 - 09:00 (Відключено)">
                     <span class="hour-start">8</span>
                     <span class="hour-end">9</span>
                 </div>
 
-                <div class="hour status-yes"
+                <div class="hour status-first"
                      data-hour="9"
                      data-date="2026-02-04"
-                     title="09:00 - 10:00 (Світло є)">
+                     title="09:00 - 10:00 (Перші 30хв)">
                     <span class="hour-start">9</span>
                     <span class="hour-end">10</span>
                 </div>
@@ -674,26 +489,26 @@
                     <span class="hour-end">14</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="14"
                      data-date="2026-02-04"
-                     title="14:00 - 15:00 (Відключено)">
+                     title="14:00 - 15:00 (Світло є)">
                     <span class="hour-start">14</span>
                     <span class="hour-end">15</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="15"
                      data-date="2026-02-04"
-                     title="15:00 - 16:00 (Відключено)">
+                     title="15:00 - 16:00 (Світло є)">
                     <span class="hour-start">15</span>
                     <span class="hour-end">16</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="16"
                      data-date="2026-02-04"
-                     title="16:00 - 17:00 (Відключено)">
+                     title="16:00 - 17:00 (Світло є)">
                     <span class="hour-start">16</span>
                     <span class="hour-end">17</span>
                 </div>
@@ -755,65 +570,65 @@
                 </div>
 
             </div>
-</div><div class="separator"></div><div class="queue-section">
+
             <div class="queue-header">
-                <div class="queue-title">Черга 3.1 - Стоянка</div>
-                <div class="date-title">03.02.2026 (✅ 7год / ❌ 17год)</div>
+                <div class="queue-title">Черга 6.1 - Бобриця</div>
+                <div class="date-title">05.02.2026 (✅ 24год / ❌ 0год) ⚠️ <span style="color: #ff9800; font-weight: normal;">Попередній графік</span></div>
             </div>
 
             <div class="timeline">
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="0"
-                     data-date="2026-02-03"
-                     title="00:00 - 01:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="00:00 - 01:00 (Світло є)">
                     <span class="hour-start">0</span>
                     <span class="hour-end">1</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="1"
-                     data-date="2026-02-03"
-                     title="01:00 - 02:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="01:00 - 02:00 (Світло є)">
                     <span class="hour-start">1</span>
                     <span class="hour-end">2</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="2"
-                     data-date="2026-02-03"
-                     title="02:00 - 03:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="02:00 - 03:00 (Світло є)">
                     <span class="hour-start">2</span>
                     <span class="hour-end">3</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="3"
-                     data-date="2026-02-03"
-                     title="03:00 - 04:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="03:00 - 04:00 (Світло є)">
                     <span class="hour-start">3</span>
                     <span class="hour-end">4</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="4"
-                     data-date="2026-02-03"
-                     title="04:00 - 05:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="04:00 - 05:00 (Світло є)">
                     <span class="hour-start">4</span>
                     <span class="hour-end">5</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="5"
-                     data-date="2026-02-03"
-                     title="05:00 - 06:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="05:00 - 06:00 (Світло є)">
                     <span class="hour-start">5</span>
                     <span class="hour-end">6</span>
                 </div>
 
                 <div class="hour status-yes"
                      data-hour="6"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="06:00 - 07:00 (Світло є)">
                     <span class="hour-start">6</span>
                     <span class="hour-end">7</span>
@@ -821,7 +636,7 @@
 
                 <div class="hour status-yes"
                      data-hour="7"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="07:00 - 08:00 (Світло є)">
                     <span class="hour-start">7</span>
                     <span class="hour-end">8</span>
@@ -829,79 +644,79 @@
 
                 <div class="hour status-yes"
                      data-hour="8"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="08:00 - 09:00 (Світло є)">
                     <span class="hour-start">8</span>
                     <span class="hour-end">9</span>
                 </div>
 
-                <div class="hour status-second"
+                <div class="hour status-yes"
                      data-hour="9"
-                     data-date="2026-02-03"
-                     title="09:00 - 10:00 (Другі 30хв)">
+                     data-date="2026-02-05"
+                     title="09:00 - 10:00 (Світло є)">
                     <span class="hour-start">9</span>
                     <span class="hour-end">10</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="10"
-                     data-date="2026-02-03"
-                     title="10:00 - 11:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="10:00 - 11:00 (Світло є)">
                     <span class="hour-start">10</span>
                     <span class="hour-end">11</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="11"
-                     data-date="2026-02-03"
-                     title="11:00 - 12:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="11:00 - 12:00 (Світло є)">
                     <span class="hour-start">11</span>
                     <span class="hour-end">12</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="12"
-                     data-date="2026-02-03"
-                     title="12:00 - 13:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="12:00 - 13:00 (Світло є)">
                     <span class="hour-start">12</span>
                     <span class="hour-end">13</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="13"
-                     data-date="2026-02-03"
-                     title="13:00 - 14:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="13:00 - 14:00 (Світло є)">
                     <span class="hour-start">13</span>
                     <span class="hour-end">14</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="14"
-                     data-date="2026-02-03"
-                     title="14:00 - 15:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="14:00 - 15:00 (Світло є)">
                     <span class="hour-start">14</span>
                     <span class="hour-end">15</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="15"
-                     data-date="2026-02-03"
-                     title="15:00 - 16:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="15:00 - 16:00 (Світло є)">
                     <span class="hour-start">15</span>
                     <span class="hour-end">16</span>
                 </div>
 
-                <div class="hour status-first"
+                <div class="hour status-yes"
                      data-hour="16"
-                     data-date="2026-02-03"
-                     title="16:00 - 17:00 (Перші 30хв)">
+                     data-date="2026-02-05"
+                     title="16:00 - 17:00 (Світло є)">
                     <span class="hour-start">16</span>
                     <span class="hour-end">17</span>
                 </div>
 
                 <div class="hour status-yes"
                      data-hour="17"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="17:00 - 18:00 (Світло є)">
                     <span class="hour-start">17</span>
                     <span class="hour-end">18</span>
@@ -909,7 +724,7 @@
 
                 <div class="hour status-yes"
                      data-hour="18"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="18:00 - 19:00 (Світло є)">
                     <span class="hour-start">18</span>
                     <span class="hour-end">19</span>
@@ -917,46 +732,46 @@
 
                 <div class="hour status-yes"
                      data-hour="19"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="19:00 - 20:00 (Світло є)">
                     <span class="hour-start">19</span>
                     <span class="hour-end">20</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="20"
-                     data-date="2026-02-03"
-                     title="20:00 - 21:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="20:00 - 21:00 (Світло є)">
                     <span class="hour-start">20</span>
                     <span class="hour-end">21</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="21"
-                     data-date="2026-02-03"
-                     title="21:00 - 22:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="21:00 - 22:00 (Світло є)">
                     <span class="hour-start">21</span>
                     <span class="hour-end">22</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="22"
-                     data-date="2026-02-03"
-                     title="22:00 - 23:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="22:00 - 23:00 (Світло є)">
                     <span class="hour-start">22</span>
                     <span class="hour-end">23</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="23"
-                     data-date="2026-02-03"
-                     title="23:00 - 00:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="23:00 - 00:00 (Світло є)">
                     <span class="hour-start">23</span>
                     <span class="hour-end">0</span>
                 </div>
 
             </div>
-
+</div><div class="separator"></div><div class="queue-section">
             <div class="queue-header">
                 <div class="queue-title">Черга 3.1 - Стоянка</div>
                 <div class="date-title">04.02.2026 (✅ 9год / ❌ 15год)</div>
@@ -1157,65 +972,65 @@
                 </div>
 
             </div>
-</div><div class="separator"></div><div class="queue-section">
+
             <div class="queue-header">
-                <div class="queue-title">Черга 3.2 - Софіївська Борщагівка - Радісна, 6</div>
-                <div class="date-title">03.02.2026 (✅ 7год / ❌ 17год)</div>
+                <div class="queue-title">Черга 3.1 - Стоянка</div>
+                <div class="date-title">05.02.2026 (✅ 24год / ❌ 0год) ⚠️ <span style="color: #ff9800; font-weight: normal;">Попередній графік</span></div>
             </div>
 
             <div class="timeline">
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="0"
-                     data-date="2026-02-03"
-                     title="00:00 - 01:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="00:00 - 01:00 (Світло є)">
                     <span class="hour-start">0</span>
                     <span class="hour-end">1</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="1"
-                     data-date="2026-02-03"
-                     title="01:00 - 02:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="01:00 - 02:00 (Світло є)">
                     <span class="hour-start">1</span>
                     <span class="hour-end">2</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="2"
-                     data-date="2026-02-03"
-                     title="02:00 - 03:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="02:00 - 03:00 (Світло є)">
                     <span class="hour-start">2</span>
                     <span class="hour-end">3</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="3"
-                     data-date="2026-02-03"
-                     title="03:00 - 04:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="03:00 - 04:00 (Світло є)">
                     <span class="hour-start">3</span>
                     <span class="hour-end">4</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="4"
-                     data-date="2026-02-03"
-                     title="04:00 - 05:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="04:00 - 05:00 (Світло є)">
                     <span class="hour-start">4</span>
                     <span class="hour-end">5</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="5"
-                     data-date="2026-02-03"
-                     title="05:00 - 06:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="05:00 - 06:00 (Світло є)">
                     <span class="hour-start">5</span>
                     <span class="hour-end">6</span>
                 </div>
 
                 <div class="hour status-yes"
                      data-hour="6"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="06:00 - 07:00 (Світло є)">
                     <span class="hour-start">6</span>
                     <span class="hour-end">7</span>
@@ -1223,7 +1038,7 @@
 
                 <div class="hour status-yes"
                      data-hour="7"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="07:00 - 08:00 (Світло є)">
                     <span class="hour-start">7</span>
                     <span class="hour-end">8</span>
@@ -1231,79 +1046,79 @@
 
                 <div class="hour status-yes"
                      data-hour="8"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="08:00 - 09:00 (Світло є)">
                     <span class="hour-start">8</span>
                     <span class="hour-end">9</span>
                 </div>
 
-                <div class="hour status-second"
+                <div class="hour status-yes"
                      data-hour="9"
-                     data-date="2026-02-03"
-                     title="09:00 - 10:00 (Другі 30хв)">
+                     data-date="2026-02-05"
+                     title="09:00 - 10:00 (Світло є)">
                     <span class="hour-start">9</span>
                     <span class="hour-end">10</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="10"
-                     data-date="2026-02-03"
-                     title="10:00 - 11:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="10:00 - 11:00 (Світло є)">
                     <span class="hour-start">10</span>
                     <span class="hour-end">11</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="11"
-                     data-date="2026-02-03"
-                     title="11:00 - 12:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="11:00 - 12:00 (Світло є)">
                     <span class="hour-start">11</span>
                     <span class="hour-end">12</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="12"
-                     data-date="2026-02-03"
-                     title="12:00 - 13:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="12:00 - 13:00 (Світло є)">
                     <span class="hour-start">12</span>
                     <span class="hour-end">13</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="13"
-                     data-date="2026-02-03"
-                     title="13:00 - 14:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="13:00 - 14:00 (Світло є)">
                     <span class="hour-start">13</span>
                     <span class="hour-end">14</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="14"
-                     data-date="2026-02-03"
-                     title="14:00 - 15:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="14:00 - 15:00 (Світло є)">
                     <span class="hour-start">14</span>
                     <span class="hour-end">15</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="15"
-                     data-date="2026-02-03"
-                     title="15:00 - 16:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="15:00 - 16:00 (Світло є)">
                     <span class="hour-start">15</span>
                     <span class="hour-end">16</span>
                 </div>
 
-                <div class="hour status-first"
+                <div class="hour status-yes"
                      data-hour="16"
-                     data-date="2026-02-03"
-                     title="16:00 - 17:00 (Перші 30хв)">
+                     data-date="2026-02-05"
+                     title="16:00 - 17:00 (Світло є)">
                     <span class="hour-start">16</span>
                     <span class="hour-end">17</span>
                 </div>
 
                 <div class="hour status-yes"
                      data-hour="17"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="17:00 - 18:00 (Світло є)">
                     <span class="hour-start">17</span>
                     <span class="hour-end">18</span>
@@ -1311,7 +1126,7 @@
 
                 <div class="hour status-yes"
                      data-hour="18"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="18:00 - 19:00 (Світло є)">
                     <span class="hour-start">18</span>
                     <span class="hour-end">19</span>
@@ -1319,46 +1134,46 @@
 
                 <div class="hour status-yes"
                      data-hour="19"
-                     data-date="2026-02-03"
+                     data-date="2026-02-05"
                      title="19:00 - 20:00 (Світло є)">
                     <span class="hour-start">19</span>
                     <span class="hour-end">20</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="20"
-                     data-date="2026-02-03"
-                     title="20:00 - 21:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="20:00 - 21:00 (Світло є)">
                     <span class="hour-start">20</span>
                     <span class="hour-end">21</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="21"
-                     data-date="2026-02-03"
-                     title="21:00 - 22:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="21:00 - 22:00 (Світло є)">
                     <span class="hour-start">21</span>
                     <span class="hour-end">22</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="22"
-                     data-date="2026-02-03"
-                     title="22:00 - 23:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="22:00 - 23:00 (Світло є)">
                     <span class="hour-start">22</span>
                     <span class="hour-end">23</span>
                 </div>
 
-                <div class="hour status-no"
+                <div class="hour status-yes"
                      data-hour="23"
-                     data-date="2026-02-03"
-                     title="23:00 - 00:00 (Відключено)">
+                     data-date="2026-02-05"
+                     title="23:00 - 00:00 (Світло є)">
                     <span class="hour-start">23</span>
                     <span class="hour-end">0</span>
                 </div>
 
             </div>
-
+</div><div class="separator"></div><div class="queue-section">
             <div class="queue-header">
                 <div class="queue-title">Черга 3.2 - Софіївська Борщагівка - Радісна, 6</div>
                 <div class="date-title">04.02.2026 (✅ 7год / ❌ 17год)</div>
@@ -1559,6 +1374,207 @@
                 </div>
 
             </div>
+
+            <div class="queue-header">
+                <div class="queue-title">Черга 3.2 - Софіївська Борщагівка - Радісна, 6</div>
+                <div class="date-title">05.02.2026 (✅ 24год / ❌ 0год) ⚠️ <span style="color: #ff9800; font-weight: normal;">Попередній графік</span></div>
+            </div>
+
+            <div class="timeline">
+
+                <div class="hour status-yes"
+                     data-hour="0"
+                     data-date="2026-02-05"
+                     title="00:00 - 01:00 (Світло є)">
+                    <span class="hour-start">0</span>
+                    <span class="hour-end">1</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="1"
+                     data-date="2026-02-05"
+                     title="01:00 - 02:00 (Світло є)">
+                    <span class="hour-start">1</span>
+                    <span class="hour-end">2</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="2"
+                     data-date="2026-02-05"
+                     title="02:00 - 03:00 (Світло є)">
+                    <span class="hour-start">2</span>
+                    <span class="hour-end">3</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="3"
+                     data-date="2026-02-05"
+                     title="03:00 - 04:00 (Світло є)">
+                    <span class="hour-start">3</span>
+                    <span class="hour-end">4</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="4"
+                     data-date="2026-02-05"
+                     title="04:00 - 05:00 (Світло є)">
+                    <span class="hour-start">4</span>
+                    <span class="hour-end">5</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="5"
+                     data-date="2026-02-05"
+                     title="05:00 - 06:00 (Світло є)">
+                    <span class="hour-start">5</span>
+                    <span class="hour-end">6</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="6"
+                     data-date="2026-02-05"
+                     title="06:00 - 07:00 (Світло є)">
+                    <span class="hour-start">6</span>
+                    <span class="hour-end">7</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="7"
+                     data-date="2026-02-05"
+                     title="07:00 - 08:00 (Світло є)">
+                    <span class="hour-start">7</span>
+                    <span class="hour-end">8</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="8"
+                     data-date="2026-02-05"
+                     title="08:00 - 09:00 (Світло є)">
+                    <span class="hour-start">8</span>
+                    <span class="hour-end">9</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="9"
+                     data-date="2026-02-05"
+                     title="09:00 - 10:00 (Світло є)">
+                    <span class="hour-start">9</span>
+                    <span class="hour-end">10</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="10"
+                     data-date="2026-02-05"
+                     title="10:00 - 11:00 (Світло є)">
+                    <span class="hour-start">10</span>
+                    <span class="hour-end">11</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="11"
+                     data-date="2026-02-05"
+                     title="11:00 - 12:00 (Світло є)">
+                    <span class="hour-start">11</span>
+                    <span class="hour-end">12</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="12"
+                     data-date="2026-02-05"
+                     title="12:00 - 13:00 (Світло є)">
+                    <span class="hour-start">12</span>
+                    <span class="hour-end">13</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="13"
+                     data-date="2026-02-05"
+                     title="13:00 - 14:00 (Світло є)">
+                    <span class="hour-start">13</span>
+                    <span class="hour-end">14</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="14"
+                     data-date="2026-02-05"
+                     title="14:00 - 15:00 (Світло є)">
+                    <span class="hour-start">14</span>
+                    <span class="hour-end">15</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="15"
+                     data-date="2026-02-05"
+                     title="15:00 - 16:00 (Світло є)">
+                    <span class="hour-start">15</span>
+                    <span class="hour-end">16</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="16"
+                     data-date="2026-02-05"
+                     title="16:00 - 17:00 (Світло є)">
+                    <span class="hour-start">16</span>
+                    <span class="hour-end">17</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="17"
+                     data-date="2026-02-05"
+                     title="17:00 - 18:00 (Світло є)">
+                    <span class="hour-start">17</span>
+                    <span class="hour-end">18</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="18"
+                     data-date="2026-02-05"
+                     title="18:00 - 19:00 (Світло є)">
+                    <span class="hour-start">18</span>
+                    <span class="hour-end">19</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="19"
+                     data-date="2026-02-05"
+                     title="19:00 - 20:00 (Світло є)">
+                    <span class="hour-start">19</span>
+                    <span class="hour-end">20</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="20"
+                     data-date="2026-02-05"
+                     title="20:00 - 21:00 (Світло є)">
+                    <span class="hour-start">20</span>
+                    <span class="hour-end">21</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="21"
+                     data-date="2026-02-05"
+                     title="21:00 - 22:00 (Світло є)">
+                    <span class="hour-start">21</span>
+                    <span class="hour-end">22</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="22"
+                     data-date="2026-02-05"
+                     title="22:00 - 23:00 (Світло є)">
+                    <span class="hour-start">22</span>
+                    <span class="hour-end">23</span>
+                </div>
+
+                <div class="hour status-yes"
+                     data-hour="23"
+                     data-date="2026-02-05"
+                     title="23:00 - 00:00 (Світло є)">
+                    <span class="hour-start">23</span>
+                    <span class="hour-end">0</span>
+                </div>
+
+            </div>
 </div>
         <div class="legend">
             <div class="legend-item">
@@ -1718,10 +1734,71 @@
             const now = new Date();
             const currentHour = now.getHours();
             const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const currentHalf = now.getMinutes() >= 30 ? 1 : 0;
+            const minutesIntoHalf = now.getMinutes() % 30;
+
+            function getHalfStatus(cell, halfIndex) {
+                if (!cell) return 'unknown';
+                if (cell.classList.contains('status-yes')) return 'on';
+                if (cell.classList.contains('status-no')) return 'off';
+                if (cell.classList.contains('status-first')) return halfIndex === 0 ? 'off' : 'on';
+                if (cell.classList.contains('status-second')) return halfIndex === 0 ? 'on' : 'off';
+                return 'unknown';
+            }
+
+            function formatDuration(totalMinutes) {
+                if (totalMinutes <= 0 || !Number.isFinite(totalMinutes)) return '0хв';
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                if (hours > 0 && minutes > 0) return `${hours}год ${minutes}хв`;
+                if (hours > 0) return `${hours}год`;
+                return `${minutes}хв`;
+            }
+
+            function updateEtaLabel(currentCell) {
+                const timeline = currentCell.closest('.timeline');
+                if (!timeline) return;
+
+                const hourCells = Array.from(timeline.querySelectorAll(`.hour[data-date="${currentDate}"]`));
+                if (hourCells.length !== 24) return;
+
+                const currentStatus = getHalfStatus(currentCell, currentHalf);
+                if (currentStatus === 'unknown') return;
+
+                const currentIndex = currentHour * 2 + currentHalf;
+                const currentOffset = currentIndex * 30 + minutesIntoHalf;
+                let minutesToChange = null;
+
+                for (let i = currentIndex + 1; i < 48; i++) {
+                    const hourIdx = Math.floor(i / 2);
+                    const halfIdx = i % 2;
+                    const status = getHalfStatus(hourCells[hourIdx], halfIdx);
+                    if (status === 'unknown') break;
+                    if (status !== currentStatus) {
+                        minutesToChange = (i * 30) - currentOffset;
+                        break;
+                    }
+                }
+
+                const label = document.createElement('div');
+                label.className = 'current-hour-eta';
+
+                if (minutesToChange === null) {
+                    label.textContent = 'До кінця дня';
+                } else {
+                    label.textContent = formatDuration(minutesToChange);
+                }
+
+                currentCell.appendChild(label);
+            }
 
             // Remove previous highlights
             document.querySelectorAll('.hour.current-hour').forEach(el => {
                 el.classList.remove('current-hour');
+            });
+
+            document.querySelectorAll('.current-hour-eta').forEach(el => {
+                el.remove();
             });
 
             // Find and highlight ALL current hour cells (for all queues on the same day)
@@ -1729,6 +1806,7 @@
             if (currentCells.length > 0) {
                 currentCells.forEach(cell => {
                     cell.classList.add('current-hour');
+                    updateEtaLabel(cell);
                 });
                 // Scroll to the first one
                 currentCells[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
