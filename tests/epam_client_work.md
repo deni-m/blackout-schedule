@@ -1,6 +1,6 @@
 # EPAM - Client Work test scenario
 
-Status: Draft
+Status: Ready
 
 Purpose: Validate navigation to Client Work area from the Services menu.
 
