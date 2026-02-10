@@ -32,6 +32,7 @@
     }
 
 
+
     h2 {
       margin-left: 20px;
       font-size: 20px;
@@ -45,6 +46,44 @@
     canvas {
       width: 100% !important;
       height: 100% !important;
+    }
+
+    /* Mobile-friendly styles */
+    @media (max-width: 768px) {
+      #top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      h2 {
+        margin-left: 0;
+        font-size: 16px;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+
+      #chart-container {
+        height: 70vh;
+        padding: 10px;
+      }
+
+    }
+
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 14px;
+      }
+
+      #chart-container {
+        height: 60vh;
+        padding: 5px;
+      }
+
     }
   </style>
 </head>
@@ -94,6 +133,16 @@
       const ecmwfRes = await fetch(ecmwfUrl);
       const ecmwfData = await ecmwfRes.json();
 
+      // Запит на GFS hourly (для детальної інформації на всі 16 днів)
+      const gfsHourlyUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m&timezone=Europe/Kiev&forecast_days=16`;
+      const gfsHourlyRes = await fetch(gfsHourlyUrl);
+      const gfsHourlyData = await gfsHourlyRes.json();
+
+      // Запит на ECMWF hourly (для детальної інформації на всі 16 днів)
+      const ecmwfHourlyUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m&timezone=Europe/Kiev&forecast_days=16`;
+      const ecmwfHourlyRes = await fetch(ecmwfHourlyUrl);
+      const ecmwfHourlyData = await ecmwfHourlyRes.json();
+
       const dates = gfsData.daily.time;
       const tempMaxGFS = gfsData.daily.temperature_2m_max;
       const tempMinGFS = gfsData.daily.temperature_2m_min;
@@ -117,8 +166,87 @@
         return [day, date];  // !!! Повертаємо масив із двох рядків
       });
 
+      // Prepare hourly data for all days
+      const hourlyTimes = gfsHourlyData.hourly.time;
+      const hourlyTemps = gfsHourlyData.hourly.temperature_2m;
+      const ecmwfHourlyTimes = ecmwfHourlyData.hourly.time;
+      const ecmwfHourlyTemps = ecmwfHourlyData.hourly.temperature_2m;
+      
+      // Create array matching daily labels length, with hourly values interpolated for all days
+      const hourlyDataForChart = [];
+      for (let dayIdx = 0; dayIdx < dates.length; dayIdx++) {
+        if (dayIdx < dates.length) {
+          // For all days, use the midday temperature from hourly data (hour 12)
+          const hourIdx = dayIdx * 24 + 12;
+          if (hourIdx < hourlyTemps.length) {
+            hourlyDataForChart.push(hourlyTemps[hourIdx]);
+          } else {
+            hourlyDataForChart.push(null);
+          }
+        } else {
+          hourlyDataForChart.push(null);
+        }
+      }
+      
+      // For detailed hourly overlay - map hourly data across all days
+      // Shift left by 0.5 to start at the left edge of the first day cell
+      const hourlyBaseTime = new Date(`${dates[0]}T00:00:00`);
+      const hourlyDataPoints = [];
+      for (let i = 0; i < Math.min(dates.length * 24, hourlyTemps.length); i++) {
+        const hourTime = new Date(hourlyTimes[i]);
+        const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
+        const xPos = (hoursFromStart / 24) - 0.5;
+        hourlyDataPoints.push({ x: xPos, y: hourlyTemps[i] });
+      }
 
+      const hourlyDataPointsECMWF = [];
+      for (let i = 0; i < Math.min(dates.length * 24, ecmwfHourlyTemps.length); i++) {
+        const hourTime = new Date(ecmwfHourlyTimes[i]);
+        const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
+        const xPos = (hoursFromStart / 24) - 0.5;
+        hourlyDataPointsECMWF.push({ x: xPos, y: ecmwfHourlyTemps[i] });
+      }
 
+      const pointFromIndex = (idx, times, temps) => {
+        const hourTime = new Date(times[idx]);
+        const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
+        const xPos = (hoursFromStart / 24) - 0.5;
+        return { x: xPos, y: temps[idx], t: times[idx].replace('T', ' ') };
+      };
+
+      const gfsDailyMinPoints = [];
+      const gfsDailyMaxPoints = [];
+      const ecmwfDailyMinPoints = [];
+      const ecmwfDailyMaxPoints = [];
+
+      for (let dayIdx = 0; dayIdx < dates.length; dayIdx++) {
+        const gfsStart = dayIdx * 24;
+        const gfsEnd = Math.min(gfsStart + 24, hourlyTemps.length);
+        if (gfsEnd - gfsStart > 0) {
+          let gfsMinIdx = gfsStart;
+          let gfsMaxIdx = gfsStart;
+          for (let i = gfsStart + 1; i < gfsEnd; i++) {
+            if (hourlyTemps[i] < hourlyTemps[gfsMinIdx]) gfsMinIdx = i;
+            if (hourlyTemps[i] > hourlyTemps[gfsMaxIdx]) gfsMaxIdx = i;
+          }
+          gfsDailyMinPoints.push(pointFromIndex(gfsMinIdx, hourlyTimes, hourlyTemps));
+          gfsDailyMaxPoints.push(pointFromIndex(gfsMaxIdx, hourlyTimes, hourlyTemps));
+        }
+
+        const ecmwfStart = dayIdx * 24;
+        const ecmwfEnd = Math.min(ecmwfStart + 24, ecmwfHourlyTemps.length);
+        if (ecmwfEnd - ecmwfStart > 0) {
+          let ecmwfMinIdx = ecmwfStart;
+          let ecmwfMaxIdx = ecmwfStart;
+          for (let i = ecmwfStart + 1; i < ecmwfEnd; i++) {
+            if (ecmwfHourlyTemps[i] < ecmwfHourlyTemps[ecmwfMinIdx]) ecmwfMinIdx = i;
+            if (ecmwfHourlyTemps[i] > ecmwfHourlyTemps[ecmwfMaxIdx]) ecmwfMaxIdx = i;
+          }
+          ecmwfDailyMinPoints.push(pointFromIndex(ecmwfMinIdx, ecmwfHourlyTimes, ecmwfHourlyTemps));
+          ecmwfDailyMaxPoints.push(pointFromIndex(ecmwfMaxIdx, ecmwfHourlyTimes, ecmwfHourlyTemps));
+        }
+      }
+      
 
       function getWeatherIcon(temp, prob) {
         if (temp < 0) return "❄️";
@@ -131,52 +259,231 @@
       const ctx = document.getElementById("forecastChart").getContext("2d");
       if (chart) chart.destroy();
 
+      // Detect if mobile device
+      const isMobile = window.innerWidth <= 768;
+
+      const hourlyLabelPlugin = {
+        id: 'hourlyMinMaxLabels',
+        afterDatasetsDraw(chart) {
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          if (!xScale || !yScale) return;
+
+          const fontSize = isMobile ? 10 : 12;
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = `bold ${fontSize}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          const drawPointLabels = (points, color, yOffset) => {
+            ctx.fillStyle = color;
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            for (const p of points) {
+              if (!p || typeof p.x !== 'number' || typeof p.y !== 'number') continue;
+              const x = xScale.getPixelForValue(p.x);
+              const y = yScale.getPixelForValue(p.y) + yOffset;
+              const text = `${p.y.toFixed(1)}°`;
+              ctx.strokeText(text, x, y);
+              ctx.fillText(text, x, y);
+            }
+          };
+
+          drawPointLabels(gfsDailyMaxPoints, '#1b5e20', -12);
+          drawPointLabels(gfsDailyMinPoints, '#1b5e20', 12);
+          drawPointLabels(ecmwfDailyMaxPoints, '#00695c', -24);
+          drawPointLabels(ecmwfDailyMinPoints, '#00695c', 24);
+
+          ctx.restore();
+        }
+      };
+
       chart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: formattedDates,
           datasets: [
-            // GFS Max Temp
+            // Hourly Temperature (all days) - Green line
             {
               type: 'line',
-              label: 'GFS Max Temp (°C)',
-              data: tempMaxGFS,
-              borderColor: 'red',
-              backgroundColor: 'red',
+              label: 'GFS Hourly Temp (°C) - all days',
+              data: hourlyDataPoints,
+              borderColor: 'rgba(139, 195, 74, 0.9)',
+              backgroundColor: 'rgba(139, 195, 74, 0.9)',
+              borderWidth: 2.5,
+              pointRadius: (context) => (context.dataIndex === 0 ? 3 : 0),
+              pointHoverRadius: (context) => (context.dataIndex === 0 ? 6 : 3),
+              pointHitRadius: 6,
               yAxisID: 'y',
-              tension: 0.3
+              xAxisID: 'x',
+              tension: 0.4,
+              spanGaps: false,
+              parsing: false
             },
-            // GFS Min Temp
+            // ECMWF Hourly Temperature (all days) - Teal dashed line
             {
               type: 'line',
-              label: 'GFS Min Temp (°C)',
-              data: tempMinGFS,
-              borderColor: 'blue',
-              backgroundColor: 'blue',
+              label: 'ECMWF Hourly Temp (°C) - all days',
+              data: hourlyDataPointsECMWF,
+              borderColor: 'rgba(0, 150, 136, 0.9)',
+              backgroundColor: 'rgba(0, 150, 136, 0.9)',
+              borderDash: [4, 4],
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 3,
+              pointHitRadius: 6,
               yAxisID: 'y',
-              tension: 0.3
+              xAxisID: 'x',
+              tension: 0.4,
+              spanGaps: false,
+              parsing: false
             },
-            // ECMWF Max Temp (штрихова)
+            // GFS Hourly Min/Max (per day)
             {
-              type: 'line',
-              label: 'ECMWF Max Temp (°C)',
-              data: tempMaxECMWF,
-              borderColor: 'rgba(255, 0, 0, 0.5)',
-              backgroundColor: 'rgba(255, 0, 0, 0.5)',
-              borderDash: [5, 5],
+              type: 'scatter',
+              label: 'GFS Hourly Min',
+              data: gfsDailyMinPoints,
+              borderColor: 'rgba(76, 175, 80, 0.9)',
+              backgroundColor: 'rgba(76, 175, 80, 0.9)',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointHitRadius: 6,
+              order: 10,
               yAxisID: 'y',
-              tension: 0.3
+              xAxisID: 'x',
+              parsing: false,
+              datalabels: {
+                display: true,
+                formatter: function (value, context) {
+                  const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
+                  return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
+                },
+                align: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 'bottom' : 'top';
+                },
+                anchor: 'end',
+                offset: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 10 : 4;
+                },
+                color: function (context) {
+                  return context.dataset.borderColor || '#000';
+                },
+                font: {
+                  weight: 'bold',
+                  size: isMobile ? 8 : 10
+                },
+                clip: false
+              }
             },
-            // ECMWF Min Temp (штрихова)
             {
-              type: 'line',
-              label: 'ECMWF Min Temp (°C)',
-              data: tempMinECMWF,
-              borderColor: 'rgba(0, 0, 255, 0.5)',
-              backgroundColor: 'rgba(0, 0, 255, 0.5)',
-              borderDash: [5, 5],
+              type: 'scatter',
+              label: 'GFS Hourly Max',
+              data: gfsDailyMaxPoints,
+              borderColor: 'rgba(46, 125, 50, 0.9)',
+              backgroundColor: 'rgba(46, 125, 50, 0.9)',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointHitRadius: 6,
+              order: 10,
               yAxisID: 'y',
-              tension: 0.3
+              xAxisID: 'x',
+              parsing: false,
+              datalabels: {
+                display: true,
+                formatter: function (value, context) {
+                  const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
+                  return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
+                },
+                align: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 'top' : 'bottom';
+                },
+                anchor: 'end',
+                offset: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 10 : 4;
+                },
+                color: function (context) {
+                  return context.dataset.borderColor || '#000';
+                },
+                font: {
+                  weight: 'bold',
+                  size: isMobile ? 8 : 10
+                },
+                clip: false
+              }
+            },
+            // ECMWF Hourly Min/Max (per day)
+            {
+              type: 'scatter',
+              label: 'ECMWF Hourly Min',
+              data: ecmwfDailyMinPoints,
+              borderColor: 'rgba(0, 150, 136, 0.7)',
+              backgroundColor: 'rgba(0, 150, 136, 0.7)',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointHitRadius: 6,
+              order: 10,
+              yAxisID: 'y',
+              xAxisID: 'x',
+              parsing: false,
+              datalabels: {
+                display: true,
+                formatter: function (value, context) {
+                  const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
+                  return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
+                },
+                align: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 'bottom' : 'top';
+                },
+                anchor: 'end',
+                offset: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 10 : 4;
+                },
+                color: function (context) {
+                  return context.dataset.borderColor || '#000';
+                },
+                font: {
+                  weight: 'bold',
+                  size: isMobile ? 8 : 10
+                },
+                clip: false
+              }
+            },
+            {
+              type: 'scatter',
+              label: 'ECMWF Hourly Max',
+              data: ecmwfDailyMaxPoints,
+              borderColor: 'rgba(0, 121, 107, 0.7)',
+              backgroundColor: 'rgba(0, 121, 107, 0.7)',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointHitRadius: 6,
+              order: 10,
+              yAxisID: 'y',
+              xAxisID: 'x',
+              parsing: false,
+              datalabels: {
+                display: true,
+                formatter: function (value, context) {
+                  const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
+                  return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
+                },
+                align: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 'top' : 'bottom';
+                },
+                anchor: 'end',
+                offset: function (context) {
+                  return (context.dataIndex % 2 === 0) ? 10 : 4;
+                },
+                color: function (context) {
+                  return context.dataset.borderColor || '#000';
+                },
+                font: {
+                  weight: 'bold',
+                  size: isMobile ? 8 : 10
+                },
+                clip: false
+              }
             },
             // GFS Precipitation
             {
@@ -205,17 +512,39 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'top'
+              position: 'top',
+              labels: {
+                font: {
+                  size: isMobile ? 10 : 12
+                },
+                boxWidth: isMobile ? 20 : 40,
+                padding: isMobile ? 5 : 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: function (items) {
+                  if (!items.length) return '';
+                  const item = items[0];
+                  const label = item.dataset.label || '';
+                  if (label.includes('Hourly')) {
+                    const rawTime = item.raw && item.raw.t ? item.raw.t : hourlyTimes[item.dataIndex];
+                    return rawTime ? rawTime.replace('T', ' ') : 'Hourly';
+                  }
+                  return item.label || '';
+                }
+              }
             },
             datalabels: {
               display: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                return label.includes("Temp") || label.includes("Precipitation (mm)");
+                return label.includes("Precipitation (mm)");
               },
               formatter: function (value, context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                if (label.includes("Temp")) {
-                  return value.toFixed(1) + "°";
+                if (label.includes("Hourly Min") || label.includes("Hourly Max")) {
+                  const val = (value && typeof value === 'object' && 'y' in value) ? value.y : value;
+                  return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
                 }
                 if (label.includes("GFS Precipitation")) {
                   const prob = precipProb[context.dataIndex];
@@ -237,32 +566,51 @@
               },
               align: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                if (label.includes("Temp")) return "top";
+                if (label.includes("Hourly Max")) return "top";
+                if (label.includes("Hourly Min")) return "bottom";
                 if (label.includes("Precipitation")) return "end";
                 return "center";
               },
               anchor: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                if (label.includes("Temp")) return "end";
+                if (label.includes("Hourly")) return "end";
                 if (label.includes("Precipitation")) return "start";
                 return "center";
               },
               offset: function (context) {
-                if (context.chart.data.datasets[context.datasetIndex].label.includes("Precipitation")) return 5;
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                if (label.includes("Hourly Max")) return (context.dataIndex % 2 === 0) ? 10 : 4;
+                if (label.includes("Hourly Min")) return (context.dataIndex % 2 === 0) ? 4 : 10;
+                if (label.includes("Precipitation")) return 5;
                 return 8;
               },
               color: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                if (label.includes("GFS Max")) return "red";
-                if (label.includes("GFS Min")) return "blue";
-                if (label.includes("ECMWF Max")) return "rgba(255,0,0,0.5)";
-                if (label.includes("ECMWF Min")) return "rgba(0,0,255,0.5)";
+                if (label.includes("Hourly")) return "#111";
                 if (label.includes("GFS Precipitation")) return "#000";
                 if (label.includes("ECMWF Precipitation")) return "#000";
                 return "#000";
               },
+              textStrokeColor: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                if (label.includes("Hourly Min") || label.includes("Hourly Max")) return "#fff";
+                return "transparent";
+              },
+              textStrokeWidth: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                return (label.includes("Hourly Min") || label.includes("Hourly Max")) ? 3 : 0;
+              },
               font: {
-                weight: 'bold'
+                weight: 'bold',
+                size: function (context) {
+                  const label = context.chart.data.datasets[context.datasetIndex].label;
+                  if (label.includes("Hourly")) return isMobile ? 10 : 12;
+                  return isMobile ? 9 : 11;
+                }
+              },
+              clip: function (context) {
+                const label = context.chart.data.datasets[context.datasetIndex].label;
+                return !(label.includes("Hourly Min") || label.includes("Hourly Max"));
               }
             }
           },
@@ -276,7 +624,7 @@
               },
               ticks: {
                 font: {
-                  size: 12 // Зменшуємо шрифт для осі Y (температура)
+                  size: isMobile ? 10 : 12
                 }
               },
               grid: {
@@ -298,7 +646,7 @@
               },
               ticks: {
                 font: {
-                  size: 12 // Зменшуємо шрифт для осі Y2 (опади)
+                  size: isMobile ? 10 : 12
                 }
               },
               grid: {
@@ -307,22 +655,39 @@
             }
             ,
             x: {
+              offset: true,
               ticks: {
                 font: {
-                  size: 12
+                  size: isMobile ? 10 : 12
                 },
                 color: function (context) {
                   return labelColors[context.index];
-                }
+                },
+                maxRotation: isMobile ? 45 : 0,
+                minRotation: isMobile ? 45 : 0
               },
               grid: {
-                display: true
+                display: true,
+                offset: true
+              }
+            },
+            xHourly: {
+              type: 'linear',
+              position: 'bottom',
+              min: -0.5,
+              max: dates.length - 0.5,
+              display: false,
+              grid: {
+                drawOnChartArea: false
+              },
+              ticks: {
+                display: false
               }
             }
 
           }
         },
-        plugins: [ChartDataLabels]
+        plugins: [hourlyLabelPlugin, ChartDataLabels]
       });
 
       document.getElementById("chart-title").textContent = `${locationName} 16-Day Weather Forecast (GFS + ECMWF)`;
