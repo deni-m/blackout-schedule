@@ -5,47 +5,203 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>16-Day Weather Forecast (GFS)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
+    :root {
+      --bg-top: #f0f6ff;
+      --bg-bottom: #e6eef7;
+      --panel: rgba(255, 255, 255, 0.7);
+      --panel-strong: rgba(255, 255, 255, 0.9);
+      --panel-border: rgba(255, 255, 255, 0.55);
+      --accent: #1d4ed8;
+      --accent-muted: #60a5fa;
+      --text-strong: #0f172a;
+      --text-muted: #4b5563;
+      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
+      --shadow-strong: 0 18px 40px rgba(15, 23, 42, 0.18);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     html,
     body {
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: Arial, sans-serif;
+      font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+      color: var(--text-strong);
+      background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+    }
+
+    body {
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(96, 165, 250, 0.18), transparent 40%),
+        radial-gradient(circle at 88% 12%, rgba(56, 189, 248, 0.12), transparent 45%),
+        radial-gradient(circle at 30% 70%, rgba(147, 197, 253, 0.18), transparent 55%);
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23cbd5f5' fill-opacity='0.28'/%3E%3Ccircle cx='46' cy='28' r='1' fill='%23dbeafe' fill-opacity='0.24'/%3E%3Ccircle cx='98' cy='56' r='1' fill='%23c7d2fe' fill-opacity='0.2'/%3E%3Ccircle cx='122' cy='12' r='1' fill='%23e0f2fe' fill-opacity='0.25'/%3E%3Ccircle cx='32' cy='102' r='1' fill='%23bfdbfe' fill-opacity='0.22'/%3E%3C/svg%3E");
+      opacity: 0.55;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: -1;
     }
 
     #top-bar {
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding: 10px 20px;
-      background: #f0f0f0;
+      gap: 14px;
+      padding: 14px 24px;
+      background: var(--panel-strong);
+      border-bottom: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(12px);
+      animation: topbar-slide 0.6s ease-out;
     }
 
     #chart-container {
       height: 85vh;
-      width: 100vw;
+      width: calc(100% - 36px);
       box-sizing: border-box;
-      padding: 20px;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-strong);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-lg);
+      margin: 18px 18px 24px;
+      animation: panel-fade 0.7s ease-out 0.1s both;
     }
 
 
 
     h2 {
-      margin-left: 20px;
-      font-size: 20px;
+      margin: 0 0 0 10px;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: var(--text-strong);
+    }
+
+    label {
+      color: var(--text-muted);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 17.5A4.5 4.5 0 0 0 18 9h-1A6 6 0 0 0 6 12a4 4 0 0 0 1 7.5h13Z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
     }
 
     select {
-      padding: 5px 10px;
+      padding: 8px 12px;
       font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--text-strong);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      background: rgba(226, 232, 240, 0.7);
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .view-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .view-btn.is-active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.25);
+    }
+
+    .view-btn:hover {
+      transform: translateY(-1px);
     }
 
     canvas {
       width: 100% !important;
       height: 100% !important;
+    }
+
+    @keyframes topbar-slide {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes panel-fade {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Mobile-friendly styles */
@@ -54,11 +210,12 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+        padding: 14px 16px;
       }
 
       h2 {
         margin-left: 0;
-        font-size: 16px;
+        font-size: 18px;
       }
 
       select {
@@ -67,9 +224,21 @@
         font-size: 16px; /* Prevents zoom on iOS */
       }
 
+      .view-toggle {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .view-btn {
+        flex: 1;
+        text-align: center;
+      }
+
       #chart-container {
         height: 70vh;
-        padding: 10px;
+        padding: 14px;
+        margin: 14px 12px 18px;
+        width: calc(100% - 24px);
       }
 
     }
@@ -81,7 +250,9 @@
 
       #chart-container {
         height: 60vh;
-        padding: 5px;
+        padding: 10px;
+        margin: 12px 10px 16px;
+        width: calc(100% - 20px);
       }
 
     }
@@ -100,6 +271,11 @@
 	  <option value="Voznesensk">Voznesensk</option>
 	  <option value="Yenot">Yenot</option>
     </select>
+    <div class="view-toggle" role="group" aria-label="Chart view">
+      <button type="button" class="view-btn is-active" data-view="temperature">Temperature</button>
+      <button type="button" class="view-btn" data-view="clouds">Clouds</button>
+      <button type="button" class="view-btn" data-view="wind">Wind</button>
+    </div>
     <h2 id="chart-title">Kyiv 16-Day Weather Forecast (GFS)</h2>
   </div>
 
@@ -119,12 +295,13 @@
     };
 
     let chart; // Store chart instance
+    let currentView = "temperature";
 
     async function fetchWeather(locationName) {
       const loc = locations[locationName];
 
       // Запит на GFS
-      const gfsUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=Europe/Kiev&forecast_days=16`;
+      const gfsUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,cloud_cover_mean,wind_speed_10m_max&timezone=Europe/Kiev&forecast_days=16`;
       const gfsRes = await fetch(gfsUrl);
       const gfsData = await gfsRes.json();
 
@@ -134,7 +311,7 @@
       const ecmwfData = await ecmwfRes.json();
 
       // Запит на GFS hourly (для детальної інформації на всі 16 днів)
-      const gfsHourlyUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m&timezone=Europe/Kiev&forecast_days=16`;
+      const gfsHourlyUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,cloud_cover,wind_speed_10m&timezone=Europe/Kiev&forecast_days=16`;
       const gfsHourlyRes = await fetch(gfsHourlyUrl);
       const gfsHourlyData = await gfsHourlyRes.json();
 
@@ -148,6 +325,8 @@
       const tempMinGFS = gfsData.daily.temperature_2m_min;
       const precipGFS = gfsData.daily.precipitation_sum;
       const precipProb = gfsData.daily.precipitation_probability_max;
+      const cloudCoverGFS = gfsData.daily.cloud_cover_mean;
+      const windSpeedGFS = gfsData.daily.wind_speed_10m_max;
 
       const tempMaxECMWF = ecmwfData.daily.temperature_2m_max;
       const tempMinECMWF = ecmwfData.daily.temperature_2m_min;
@@ -169,6 +348,8 @@
       // Prepare hourly data for all days
       const hourlyTimes = gfsHourlyData.hourly.time;
       const hourlyTemps = gfsHourlyData.hourly.temperature_2m;
+      const hourlyCloudCover = gfsHourlyData.hourly.cloud_cover;
+      const hourlyWindSpeed = gfsHourlyData.hourly.wind_speed_10m;
       const ecmwfHourlyTimes = ecmwfHourlyData.hourly.time;
       const ecmwfHourlyTemps = ecmwfHourlyData.hourly.temperature_2m;
       
@@ -205,6 +386,25 @@
         const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
         const xPos = (hoursFromStart / 24) - 0.5;
         hourlyDataPointsECMWF.push({ x: xPos, y: ecmwfHourlyTemps[i] });
+      }
+
+      const mixedCloudPoints = [];
+      const mixedWindPoints = [];
+      const hourlyLimit = Math.min(dates.length * 24, hourlyTimes.length);
+      for (let i = 0; i < hourlyLimit; i++) {
+        const hourTime = new Date(hourlyTimes[i]);
+        const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
+        const xPos = (hoursFromStart / 24) - 0.5;
+        mixedCloudPoints.push({
+          x: xPos,
+          y: hourlyCloudCover[i],
+          t: hourlyTimes[i].replace('T', ' ')
+        });
+        mixedWindPoints.push({
+          x: xPos,
+          y: hourlyWindSpeed[i],
+          t: hourlyTimes[i].replace('T', ' ')
+        });
       }
 
       const pointFromIndex = (idx, times, temps) => {
@@ -256,6 +456,13 @@
         return "☀️";
       }
 
+      function getSkyIcon(cloudCover) {
+        if (cloudCover >= 85) return "☁️";
+        if (cloudCover >= 60) return "🌥️";
+        if (cloudCover >= 30) return "🌤️";
+        return "☀️";
+      }
+
       const ctx = document.getElementById("forecastChart").getContext("2d");
       if (chart) chart.destroy();
 
@@ -265,6 +472,7 @@
       const hourlyLabelPlugin = {
         id: 'hourlyMinMaxLabels',
         afterDatasetsDraw(chart) {
+          if (currentView !== 'temperature') return;
           const xScale = chart.scales.x;
           const yScale = chart.scales.y;
           if (!xScale || !yScale) return;
@@ -308,6 +516,7 @@
             {
               type: 'line',
               label: 'GFS Hourly Temp (°C) - all days',
+              viewGroup: 'temperature',
               data: hourlyDataPoints,
               borderColor: 'rgba(139, 195, 74, 0.9)',
               backgroundColor: 'rgba(139, 195, 74, 0.9)',
@@ -325,6 +534,7 @@
             {
               type: 'line',
               label: 'ECMWF Hourly Temp (°C) - all days',
+              viewGroup: 'temperature',
               data: hourlyDataPointsECMWF,
               borderColor: 'rgba(0, 150, 136, 0.9)',
               backgroundColor: 'rgba(0, 150, 136, 0.9)',
@@ -343,6 +553,7 @@
             {
               type: 'scatter',
               label: 'GFS Hourly Min',
+              viewGroup: 'temperature',
               data: gfsDailyMinPoints,
               borderColor: 'rgba(76, 175, 80, 0.9)',
               backgroundColor: 'rgba(76, 175, 80, 0.9)',
@@ -379,6 +590,7 @@
             {
               type: 'scatter',
               label: 'GFS Hourly Max',
+              viewGroup: 'temperature',
               data: gfsDailyMaxPoints,
               borderColor: 'rgba(46, 125, 50, 0.9)',
               backgroundColor: 'rgba(46, 125, 50, 0.9)',
@@ -416,6 +628,7 @@
             {
               type: 'scatter',
               label: 'ECMWF Hourly Min',
+              viewGroup: 'temperature',
               data: ecmwfDailyMinPoints,
               borderColor: 'rgba(0, 150, 136, 0.7)',
               backgroundColor: 'rgba(0, 150, 136, 0.7)',
@@ -452,6 +665,7 @@
             {
               type: 'scatter',
               label: 'ECMWF Hourly Max',
+              viewGroup: 'temperature',
               data: ecmwfDailyMaxPoints,
               borderColor: 'rgba(0, 121, 107, 0.7)',
               backgroundColor: 'rgba(0, 121, 107, 0.7)',
@@ -489,6 +703,7 @@
             {
               type: 'bar',
               label: 'GFS Precipitation (mm)',
+              viewGroup: 'temperature',
               data: precipGFS,
               backgroundColor: 'rgba(54, 162, 235, 0.6)',
               borderColor: 'rgba(54, 162, 235, 1)',
@@ -499,11 +714,44 @@
             {
               type: 'bar',
               label: 'ECMWF Precipitation (mm)',
+              viewGroup: 'temperature',
               data: precipECMWF,
               backgroundColor: 'rgba(153, 204, 255, 0.6)', // світліший синій
               borderColor: 'rgba(153, 204, 255, 1)',
               borderWidth: 1,
               yAxisID: 'y2'
+            },
+            // GFS Cloud Cover
+            {
+              type: 'line',
+              label: 'GFS Cloud Cover (%)',
+              viewGroup: 'clouds',
+              data: mixedCloudPoints,
+              borderColor: 'rgba(71, 85, 105, 0.85)',
+              backgroundColor: 'rgba(71, 85, 105, 0.2)',
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              yAxisID: 'y3',
+              xAxisID: 'x',
+              tension: 0.3,
+              parsing: false
+            },
+            // GFS Wind Speed
+            {
+              type: 'line',
+              label: 'GFS Wind Speed (m/s)',
+              viewGroup: 'wind',
+              data: mixedWindPoints,
+              borderColor: 'rgba(30, 64, 175, 0.9)',
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              yAxisID: 'y4',
+              xAxisID: 'x',
+              tension: 0.3,
+              parsing: false
             }
           ]
         },
@@ -514,6 +762,9 @@
             legend: {
               position: 'top',
               labels: {
+                filter: function (item) {
+                  return !(item.text.includes('Hourly Min') || item.text.includes('Hourly Max'));
+                },
                 font: {
                   size: isMobile ? 10 : 12
                 },
@@ -531,6 +782,10 @@
                     const rawTime = item.raw && item.raw.t ? item.raw.t : hourlyTimes[item.dataIndex];
                     return rawTime ? rawTime.replace('T', ' ') : 'Hourly';
                   }
+                  if (label.includes('Cloud Cover') || label.includes('Wind Speed')) {
+                    const rawTime = item.raw && item.raw.t ? item.raw.t : item.label;
+                    return rawTime ? rawTime.replace('T', ' ') : '';
+                  }
                   return item.label || '';
                 }
               }
@@ -538,13 +793,17 @@
             datalabels: {
               display: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                return label.includes("Precipitation (mm)");
+                return label.includes("Precipitation (mm)") || label.includes("Cloud Cover (%)");
               },
               formatter: function (value, context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
                 if (label.includes("Hourly Min") || label.includes("Hourly Max")) {
                   const val = (value && typeof value === 'object' && 'y' in value) ? value.y : value;
                   return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
+                }
+                if (label.includes("Cloud Cover (%)")) {
+                  const cloud = typeof value === 'number' ? value : null;
+                  return cloud !== null ? getSkyIcon(cloud) : null;
                 }
                 if (label.includes("GFS Precipitation")) {
                   const prob = precipProb[context.dataIndex];
@@ -568,12 +827,14 @@
                 const label = context.chart.data.datasets[context.datasetIndex].label;
                 if (label.includes("Hourly Max")) return "top";
                 if (label.includes("Hourly Min")) return "bottom";
+                if (label.includes("Cloud Cover (%)")) return "top";
                 if (label.includes("Precipitation")) return "end";
                 return "center";
               },
               anchor: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
                 if (label.includes("Hourly")) return "end";
+                if (label.includes("Cloud Cover (%)")) return "end";
                 if (label.includes("Precipitation")) return "start";
                 return "center";
               },
@@ -581,12 +842,14 @@
                 const label = context.chart.data.datasets[context.datasetIndex].label;
                 if (label.includes("Hourly Max")) return (context.dataIndex % 2 === 0) ? 10 : 4;
                 if (label.includes("Hourly Min")) return (context.dataIndex % 2 === 0) ? 4 : 10;
+                if (label.includes("Cloud Cover (%)")) return 6;
                 if (label.includes("Precipitation")) return 5;
                 return 8;
               },
               color: function (context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
                 if (label.includes("Hourly")) return "#111";
+                if (label.includes("Cloud Cover (%)")) return "#111";
                 if (label.includes("GFS Precipitation")) return "#000";
                 if (label.includes("ECMWF Precipitation")) return "#000";
                 return "#000";
@@ -605,6 +868,7 @@
                 size: function (context) {
                   const label = context.chart.data.datasets[context.datasetIndex].label;
                   if (label.includes("Hourly")) return isMobile ? 10 : 12;
+                  if (label.includes("Cloud Cover (%)")) return isMobile ? 10 : 12;
                   return isMobile ? 9 : 11;
                 }
               },
@@ -652,8 +916,44 @@
               grid: {
                 drawOnChartArea: false
               }
-            }
-            ,
+            },
+            y3: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Cloud Cover (%)'
+              },
+              ticks: {
+                font: {
+                  size: isMobile ? 10 : 12
+                }
+              },
+              grid: {
+                drawOnChartArea: false
+              },
+              offset: true
+            },
+            y4: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Wind Speed (m/s)'
+              },
+              ticks: {
+                font: {
+                  size: isMobile ? 10 : 12
+                }
+              },
+              grid: {
+                drawOnChartArea: false
+              },
+              offset: true
+            },
             x: {
               offset: true,
               ticks: {
@@ -690,14 +990,48 @@
         plugins: [hourlyLabelPlugin, ChartDataLabels]
       });
 
+      applyView(currentView);
+
       document.getElementById("chart-title").textContent = `${locationName} 16-Day Weather Forecast (GFS + ECMWF)`;
 
+    }
+
+    function setActiveViewButton(view) {
+      const buttons = document.querySelectorAll(".view-btn");
+      buttons.forEach((button) => {
+        const isActive = button.dataset.view === view;
+        button.classList.toggle("is-active", isActive);
+      });
+    }
+
+    function applyView(view) {
+      currentView = view;
+      if (!chart) return;
+
+      chart.data.datasets.forEach((dataset) => {
+        if (!dataset.viewGroup) return;
+        dataset.hidden = dataset.viewGroup !== view;
+      });
+
+      if (chart.options.scales.y2) chart.options.scales.y2.display = view === "temperature";
+      if (chart.options.scales.y3) chart.options.scales.y3.display = view === "clouds";
+      if (chart.options.scales.y4) chart.options.scales.y4.display = view === "wind";
+
+      chart.update();
     }
 
     fetchWeather("Kyiv"); // Initial load
 
     document.getElementById("location").addEventListener("change", async (e) => {
       await fetchWeather(e.target.value);
+    });
+
+    document.querySelectorAll(".view-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = button.dataset.view;
+        setActiveViewButton(view);
+        applyView(view);
+      });
     });
 
 
