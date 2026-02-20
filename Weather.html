@@ -76,8 +76,9 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      flex-wrap: wrap;
       gap: 14px;
-      padding: 14px 24px;
+      padding: 14px clamp(14px, 3vw, 24px);
       background: var(--panel-strong);
       border-bottom: 1px solid var(--panel-border);
       box-shadow: var(--shadow-soft);
@@ -86,8 +87,10 @@
     }
 
     #chart-container {
-      height: 85vh;
+      height: clamp(420px, 85dvh, 920px);
       width: calc(100% - 36px);
+      position: relative;
+      overflow: hidden;
       box-sizing: border-box;
       padding: 24px;
       background: var(--panel);
@@ -108,6 +111,12 @@
       font-weight: 600;
       letter-spacing: 0.2px;
       color: var(--text-strong);
+    }
+
+    #top-bar > h2 {
+      flex: 1 1 320px;
+      min-width: 240px;
+      line-height: 1.25;
     }
 
     label {
@@ -132,6 +141,7 @@
       padding: 8px 12px;
       font-size: 14px;
       font-weight: 600;
+      min-height: 42px;
       border-radius: var(--radius-md);
       border: 1px solid rgba(148, 163, 184, 0.6);
       background: rgba(255, 255, 255, 0.95);
@@ -159,6 +169,7 @@
       border: none;
       background: transparent;
       padding: 6px 12px;
+      min-height: 40px;
       border-radius: 999px;
       font-size: 13px;
       font-weight: 600;
@@ -179,7 +190,7 @@
 
     canvas {
       width: 100% !important;
-      height: 100% !important;
+      display: block;
     }
 
     @keyframes topbar-slide {
@@ -208,14 +219,24 @@
     @media (max-width: 768px) {
       #top-bar {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 10px;
         padding: 14px 16px;
       }
 
-      h2 {
+      #top-bar > h2 {
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 0;
         margin-left: 0;
+      }
+
+      h2 {
         font-size: 18px;
+      }
+
+      label {
+        font-size: 14px;
       }
 
       select {
@@ -232,27 +253,38 @@
       .view-btn {
         flex: 1;
         text-align: center;
+        min-height: 42px;
       }
 
       #chart-container {
-        height: 70vh;
+        height: auto;
+        min-height: 0;
         padding: 14px;
         margin: 14px 12px 18px;
         width: calc(100% - 24px);
+      }
+
+      #forecastChart {
+        height: clamp(300px, 52dvh, 500px) !important;
       }
 
     }
 
     @media (max-width: 480px) {
       h2 {
-        font-size: 14px;
+        font-size: 15px;
       }
 
       #chart-container {
-        height: 60vh;
+        height: auto;
+        min-height: 0;
         padding: 10px;
         margin: 12px 10px 16px;
         width: calc(100% - 20px);
+      }
+
+      #forecastChart {
+        height: clamp(280px, 50dvh, 420px) !important;
       }
 
     }
@@ -296,8 +328,39 @@
 
     let chart; // Store chart instance
     let currentView = "temperature";
+    let currentLocation = "Kyiv";
+    const MOBILE_BREAKPOINT = 768;
+    let wasMobileViewport = window.innerWidth <= MOBILE_BREAKPOINT;
+
+    function isMobileViewport() {
+      return window.innerWidth <= MOBILE_BREAKPOINT;
+    }
+
+    function applyResponsiveChartOptions() {
+      if (!chart) return;
+      const mobile = isMobileViewport();
+
+      chart.options.plugins.legend.display = !mobile;
+      chart.options.plugins.legend.labels.font.size = mobile ? 10 : 12;
+      chart.options.plugins.legend.labels.boxWidth = mobile ? 20 : 40;
+      chart.options.plugins.legend.labels.padding = mobile ? 5 : 10;
+
+      chart.options.scales.x.ticks.font.size = mobile ? 10 : 12;
+      chart.options.scales.x.ticks.maxRotation = mobile ? 45 : 0;
+      chart.options.scales.x.ticks.minRotation = mobile ? 45 : 0;
+
+      ["y", "y2", "y3", "y4"].forEach((axisKey) => {
+        const axis = chart.options.scales[axisKey];
+        if (axis?.ticks?.font) {
+          axis.ticks.font.size = mobile ? 10 : 12;
+        }
+      });
+
+      chart.update("none");
+    }
 
     async function fetchWeather(locationName) {
+      currentLocation = locationName;
       const loc = locations[locationName];
 
       // Запит на GFS
@@ -466,12 +529,13 @@
       const ctx = document.getElementById("forecastChart").getContext("2d");
       if (chart) chart.destroy();
 
-      // Detect if mobile device
-      const isMobile = window.innerWidth <= 768;
+      // Detect viewport mode
+      const isMobile = isMobileViewport();
 
       const hourlyLabelPlugin = {
         id: 'hourlyMinMaxLabels',
         afterDatasetsDraw(chart) {
+          if (isMobile) return;
           if (currentView !== 'temperature') return;
           const xScale = chart.scales.x;
           const yScale = chart.scales.y;
@@ -521,9 +585,9 @@
               borderColor: 'rgba(139, 195, 74, 0.9)',
               backgroundColor: 'rgba(139, 195, 74, 0.9)',
               borderWidth: 2.5,
-              pointRadius: (context) => (context.dataIndex === 0 ? 3 : 0),
-              pointHoverRadius: (context) => (context.dataIndex === 0 ? 6 : 3),
-              pointHitRadius: 6,
+              pointRadius: (context) => (isMobile ? 0 : (context.dataIndex === 0 ? 3 : 0)),
+              pointHoverRadius: (context) => (isMobile ? 0 : (context.dataIndex === 0 ? 6 : 3)),
+              pointHitRadius: isMobile ? 0 : 6,
               yAxisID: 'y',
               xAxisID: 'x',
               tension: 0.4,
@@ -541,8 +605,8 @@
               borderDash: [4, 4],
               borderWidth: 2,
               pointRadius: 0,
-              pointHoverRadius: 3,
-              pointHitRadius: 6,
+              pointHoverRadius: isMobile ? 0 : 3,
+              pointHitRadius: isMobile ? 0 : 6,
               yAxisID: 'y',
               xAxisID: 'x',
               tension: 0.4,
@@ -557,15 +621,15 @@
               data: gfsDailyMinPoints,
               borderColor: 'rgba(76, 175, 80, 0.9)',
               backgroundColor: 'rgba(76, 175, 80, 0.9)',
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              pointHitRadius: 6,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              pointHitRadius: isMobile ? 0 : 6,
               order: 10,
               yAxisID: 'y',
               xAxisID: 'x',
               parsing: false,
               datalabels: {
-                display: true,
+                display: !isMobile,
                 formatter: function (value, context) {
                   const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
                   return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
@@ -594,15 +658,15 @@
               data: gfsDailyMaxPoints,
               borderColor: 'rgba(46, 125, 50, 0.9)',
               backgroundColor: 'rgba(46, 125, 50, 0.9)',
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              pointHitRadius: 6,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              pointHitRadius: isMobile ? 0 : 6,
               order: 10,
               yAxisID: 'y',
               xAxisID: 'x',
               parsing: false,
               datalabels: {
-                display: true,
+                display: !isMobile,
                 formatter: function (value, context) {
                   const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
                   return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
@@ -632,15 +696,15 @@
               data: ecmwfDailyMinPoints,
               borderColor: 'rgba(0, 150, 136, 0.7)',
               backgroundColor: 'rgba(0, 150, 136, 0.7)',
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              pointHitRadius: 6,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              pointHitRadius: isMobile ? 0 : 6,
               order: 10,
               yAxisID: 'y',
               xAxisID: 'x',
               parsing: false,
               datalabels: {
-                display: true,
+                display: !isMobile,
                 formatter: function (value, context) {
                   const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
                   return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
@@ -669,15 +733,15 @@
               data: ecmwfDailyMaxPoints,
               borderColor: 'rgba(0, 121, 107, 0.7)',
               backgroundColor: 'rgba(0, 121, 107, 0.7)',
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              pointHitRadius: 6,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              pointHitRadius: isMobile ? 0 : 6,
               order: 10,
               yAxisID: 'y',
               xAxisID: 'x',
               parsing: false,
               datalabels: {
-                display: true,
+                display: !isMobile,
                 formatter: function (value, context) {
                   const val = context.raw && typeof context.raw.y === 'number' ? context.raw.y : value;
                   return typeof val === 'number' ? `${val.toFixed(1)}°` : null;
@@ -760,9 +824,13 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
+              display: !isMobile,
               position: 'top',
               labels: {
-                filter: function (item) {
+                filter: function (item, data) {
+                  const dataset = data && data.datasets ? data.datasets[item.datasetIndex] : null;
+                  if (!dataset) return false;
+                  if (dataset.viewGroup && dataset.viewGroup !== currentView) return false;
                   return !(item.text.includes('Hourly Min') || item.text.includes('Hourly Max'));
                 },
                 font: {
@@ -792,6 +860,7 @@
             },
             datalabels: {
               display: function (context) {
+                if (isMobile) return false;
                 const label = context.chart.data.datasets[context.datasetIndex].label;
                 return label.includes("Precipitation (mm)") || label.includes("Cloud Cover (%)");
               },
@@ -991,6 +1060,7 @@
       });
 
       applyView(currentView);
+      applyResponsiveChartOptions();
 
       document.getElementById("chart-title").textContent = `${locationName} 16-Day Weather Forecast (GFS + ECMWF)`;
 
@@ -1032,6 +1102,16 @@
         setActiveViewButton(view);
         applyView(view);
       });
+    });
+
+    window.addEventListener("resize", () => {
+      applyResponsiveChartOptions();
+
+      const isMobileNow = isMobileViewport();
+      if (isMobileNow !== wasMobileViewport) {
+        wasMobileViewport = isMobileNow;
+        fetchWeather(currentLocation);
+      }
     });
 
 
