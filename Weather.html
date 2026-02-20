@@ -262,9 +262,14 @@
         padding: 14px;
         margin: 14px 12px 18px;
         width: calc(100% - 24px);
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
       }
 
       #forecastChart {
+        width: max(100%, 760px) !important;
+        min-width: 760px;
         height: clamp(300px, 52dvh, 500px) !important;
       }
 
@@ -281,9 +286,14 @@
         padding: 10px;
         margin: 12px 10px 16px;
         width: calc(100% - 20px);
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
       }
 
       #forecastChart {
+        width: max(100%, 680px) !important;
+        min-width: 680px;
         height: clamp(280px, 50dvh, 420px) !important;
       }
 
@@ -346,13 +356,30 @@
       chart.options.plugins.legend.labels.padding = mobile ? 5 : 10;
 
       chart.options.scales.x.ticks.font.size = mobile ? 10 : 12;
-      chart.options.scales.x.ticks.maxRotation = mobile ? 45 : 0;
-      chart.options.scales.x.ticks.minRotation = mobile ? 45 : 0;
+      chart.options.scales.x.ticks.maxRotation = 0;
+      chart.options.scales.x.ticks.minRotation = 0;
+      chart.options.scales.x.ticks.autoSkip = false;
+      chart.options.scales.x.ticks.padding = mobile ? 6 : 4;
+      chart.options.scales.x.ticks.callback = function (value, index) {
+        const rawLabel = this.getLabelForValue(value);
+        if (Array.isArray(rawLabel)) {
+          if (mobile) {
+            return rawLabel[0];
+          }
+          return rawLabel;
+        }
+        return rawLabel;
+      };
+      chart.options.scales.x.grid.color = mobile ? 'rgba(148, 163, 184, 0.45)' : 'rgba(148, 163, 184, 0.25)';
+      chart.options.scales.x.grid.lineWidth = mobile ? 1 : 1;
 
       ["y", "y2", "y3", "y4"].forEach((axisKey) => {
         const axis = chart.options.scales[axisKey];
         if (axis?.ticks?.font) {
           axis.ticks.font.size = mobile ? 10 : 12;
+        }
+        if (axis?.title) {
+          axis.title.display = !mobile;
         }
       });
 
@@ -952,7 +979,7 @@
               type: 'linear',
               position: 'left',
               title: {
-                display: true,
+                display: !isMobile,
                 text: 'Temperature (°C)'
               },
               ticks: {
@@ -974,7 +1001,7 @@
               position: 'right',
               beginAtZero: true,
               title: {
-                display: true,
+                display: !isMobile,
                 text: 'Precipitation (mm)'
               },
               ticks: {
@@ -992,7 +1019,7 @@
               beginAtZero: true,
               max: 100,
               title: {
-                display: true,
+                display: !isMobile,
                 text: 'Cloud Cover (%)'
               },
               ticks: {
@@ -1010,7 +1037,7 @@
               position: 'right',
               beginAtZero: true,
               title: {
-                display: true,
+                display: !isMobile,
                 text: 'Wind Speed (m/s)'
               },
               ticks: {
@@ -1032,12 +1059,26 @@
                 color: function (context) {
                   return labelColors[context.index];
                 },
-                maxRotation: isMobile ? 45 : 0,
-                minRotation: isMobile ? 45 : 0
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false,
+                padding: isMobile ? 6 : 4,
+                callback: function (value, index) {
+                  const rawLabel = this.getLabelForValue(value);
+                  if (Array.isArray(rawLabel)) {
+                    if (isMobile) {
+                      return rawLabel[0];
+                    }
+                    return rawLabel;
+                  }
+                  return rawLabel;
+                }
               },
               grid: {
                 display: true,
-                offset: true
+                offset: true,
+                color: isMobile ? 'rgba(148, 163, 184, 0.45)' : 'rgba(148, 163, 184, 0.25)',
+                lineWidth: 1
               }
             },
             xHourly: {
