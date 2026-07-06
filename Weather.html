@@ -305,13 +305,33 @@
   <div id="top-bar">
     <label for="location">Location:&nbsp;</label>
     <select id="location">
-      <option value="Kyiv">Kyiv</option>
-      <option value="Yasinia">Yasinia</option>
-      <option value="Dragobrat">Dragobrat</option>
-      <option value="Bukovel">Bukovel</option>
-	  <option value="Odesa">Odesa</option>
-	  <option value="Voznesensk">Voznesensk</option>
-	  <option value="Yenot">Yenot</option>
+      <optgroup label="Ukraine">
+        <option value="Kyiv">Kyiv</option>
+        <option value="Yasinia">Yasinia</option>
+        <option value="Dragobrat">Dragobrat</option>
+        <option value="Bukovel">Bukovel</option>
+        <option value="Odesa">Odesa</option>
+        <option value="Voznesensk">Voznesensk</option>
+        <option value="Yenot">Yenot</option>
+      </optgroup>
+      <optgroup label="Italy">
+        <option value="Trieste">Trieste</option>
+        <option value="Cortina">Cortina</option>
+        <option value="Pisa">Pisa</option>
+        <option value="Florence">Florence</option>
+        <option value="Tropea">Tropea</option>
+        <option value="Como">Como</option>
+        <option value="Rome">Rome</option>
+      </optgroup>
+      <optgroup label="Slovenia">
+        <option value="Liubliana">Liubliana</option>
+      </optgroup>
+      <optgroup label="Hungary">
+        <option value="Budapest">Budapest</option>
+      </optgroup>
+      <optgroup label="Spain">
+        <option value="CalaD'Or">Cala d'Or</option>
+      </optgroup>
     </select>
     <div class="view-toggle" role="group" aria-label="Chart view">
       <button type="button" class="view-btn is-active" data-view="temperature">Temperature</button>
@@ -331,14 +351,25 @@
       Yasinia: { lat: 48.2742, lon: 24.3686 },
       Dragobrat: { lat: 48.1826, lon: 24.3811 },
       Bukovel: { lat: 48.3557, lon: 24.4193 },
-	  Odesa: { lat: 46.4825, lon: 30.7233 },
+	  Odesa: { lat: 46.4825, lon: 30.7233, marine: true },
 	  Voznesensk: { lat: 47.5647, lon: 31.3364 },
-	  Yenot: { "lat": 48.1733153, "lon": 24.8654665 }
+	  Yenot: { "lat": 48.1733153, "lon": 24.8654665 },
+	  Trieste: { lat: 45.6495, lon: 13.7768, marine: true },
+	  Cortina: { lat: 46.5405, lon: 12.1357 },
+	  Pisa: { lat: 43.7228, lon: 10.4017 },
+	  Florence: { lat: 43.7696, lon: 11.2558 },
+	  Tropea: { lat: 38.6761, lon: 15.8986, marine: true },
+	  Como: { lat: 45.8081, lon: 9.0852 },
+	  Rome: { lat: 41.9028, lon: 12.4964 },
+	  Liubliana: { lat: 46.0569, lon: 14.5058 },
+	  Budapest: { lat: 47.4979, lon: 19.0402 },
+	  "CalaD'Or": { lat: 39.3667, lon: 3.2333, marine: true }
     };
 
     let chart; // Store chart instance
     let currentView = "temperature";
     let currentLocation = "Kyiv";
+    let hasMarineData = false;
     const MOBILE_BREAKPOINT = 768;
     let wasMobileViewport = window.innerWidth <= MOBILE_BREAKPOINT;
 
@@ -409,6 +440,30 @@
       const ecmwfHourlyUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,precipitation&timezone=Europe/Kiev&forecast_days=16`;
       const ecmwfHourlyRes = await fetch(ecmwfHourlyUrl);
       const ecmwfHourlyData = await ecmwfHourlyRes.json();
+
+      let seaSurfaceTemps = null;
+      hasMarineData = false;
+      if (loc.marine) {
+        try {
+          const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&hourly=sea_surface_temperature&timezone=auto&forecast_days=16`;
+          const marineRes = await fetch(marineUrl);
+          const marineData = await marineRes.json();
+          const hourlySST = marineData.hourly?.sea_surface_temperature ?? null;
+          if (hourlySST && hourlySST.length > 0) {
+            const dailySST = [];
+            for (let d = 0; d < 16; d++) {
+              const slice = hourlySST.slice(d * 24, (d + 1) * 24).filter(v => v !== null);
+              dailySST.push(slice.length > 0 ? slice.reduce((a, b) => a + b, 0) / slice.length : null);
+            }
+            if (dailySST.some(v => v !== null)) {
+              seaSurfaceTemps = dailySST;
+              hasMarineData = true;
+            }
+          }
+        } catch (e) {
+          console.warn('Marine API fetch failed:', e);
+        }
+      }
 
       const dates = gfsData.daily.time;
       const tempMaxGFS = gfsData.daily.temperature_2m_max;
@@ -935,6 +990,25 @@
               xAxisID: 'x',
               tension: 0.3,
               parsing: false
+            },
+            // Sea Surface Temperature (coastal locations only)
+            {
+              type: 'line',
+              label: 'Sea Surface Temp (°C)',
+              viewGroup: 'temperature',
+              marineOnly: true,
+              data: seaSurfaceTemps || [],
+              hidden: !hasMarineData,
+              borderColor: 'rgba(0, 119, 190, 0.9)',
+              backgroundColor: 'rgba(0, 119, 190, 0.08)',
+              borderDash: [6, 3],
+              borderWidth: 2.5,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              yAxisID: 'y',
+              xAxisID: 'x',
+              tension: 0.4,
+              datalabels: { display: false }
             }
           ]
         },
@@ -950,6 +1024,7 @@
                   const dataset = data && data.datasets ? data.datasets[item.datasetIndex] : null;
                   if (!dataset) return false;
                   if (dataset.viewGroup && dataset.viewGroup !== currentView) return false;
+                  if (dataset.marineOnly && !hasMarineData) return false;
                   return !(item.text.includes('Hourly Min') || item.text.includes('Hourly Max') || item.text === 'Precip Labels');
                 },
                 font: {
@@ -1087,6 +1162,7 @@
               type: 'linear',
               position: 'right',
               beginAtZero: true,
+              max: 15,
               title: {
                 display: !isMobile,
                 text: 'Precipitation (mm)'
@@ -1215,6 +1291,7 @@
 
       chart.data.datasets.forEach((dataset) => {
         if (!dataset.viewGroup) return;
+        if (dataset.marineOnly && !hasMarineData) { dataset.hidden = true; return; }
         dataset.hidden = dataset.viewGroup !== view;
       });
 
