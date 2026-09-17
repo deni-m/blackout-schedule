@@ -447,22 +447,23 @@
     <label for="location">Location:&nbsp;</label>
     <select id="location">
       <optgroup label="Ukraine">
-        <option value="Kyiv">Kyiv</option>
-        <option value="Yasinia">Yasinia</option>
-        <option value="Dragobrat">Dragobrat</option>
         <option value="Bukovel">Bukovel</option>
+        <option value="Dragobrat">Dragobrat</option>
+        <option value="Kamianets-Podilskyi">Kamianets-Podilskyi</option>
+        <option value="Kyiv" selected>Kyiv</option>
         <option value="Odesa">Odesa</option>
         <option value="Voznesensk">Voznesensk</option>
+        <option value="Yasinia">Yasinia</option>
         <option value="Yenot">Yenot</option>
       </optgroup>
       <optgroup label="Italy">
-        <option value="Trieste">Trieste</option>
-        <option value="Cortina">Cortina</option>
-        <option value="Pisa">Pisa</option>
-        <option value="Florence">Florence</option>
-        <option value="Tropea">Tropea</option>
         <option value="Como">Como</option>
+        <option value="Cortina">Cortina</option>
+        <option value="Florence">Florence</option>
+        <option value="Pisa">Pisa</option>
         <option value="Rome">Rome</option>
+        <option value="Trieste">Trieste</option>
+        <option value="Tropea">Tropea</option>
       </optgroup>
       <optgroup label="Slovenia">
         <option value="Liubliana">Liubliana</option>
@@ -499,6 +500,7 @@
     (function initLongForecast() {
     const locations = {
       Kyiv: { lat: 50.4328, lon: 30.46875 },
+      "Kamianets-Podilskyi": { lat: 48.683787, lon: 26.580789 },
       Yasinia: { lat: 48.2742, lon: 24.3686 },
       Dragobrat: { lat: 48.1826, lon: 24.3811 },
       Bukovel: { lat: 48.3557, lon: 24.4193 },
@@ -1572,22 +1574,23 @@
     <label for="short-location">Location:&nbsp;</label>
     <select id="short-location">
       <optgroup label="Ukraine">
-        <option value="Kyiv" selected>Kyiv</option>
-        <option value="Yasinia">Yasinia</option>
-        <option value="Dragobrat">Dragobrat</option>
         <option value="Bukovel">Bukovel</option>
+        <option value="Dragobrat">Dragobrat</option>
+        <option value="Kamianets-Podilskyi">Kamianets-Podilskyi</option>
+        <option value="Kyiv" selected>Kyiv</option>
         <option value="Odesa">Odesa</option>
         <option value="Voznesensk">Voznesensk</option>
+        <option value="Yasinia">Yasinia</option>
         <option value="Yenot">Yenot</option>
       </optgroup>
       <optgroup label="Italy">
-        <option value="Trieste">Trieste</option>
-        <option value="Cortina">Cortina</option>
-        <option value="Pisa">Pisa</option>
-        <option value="Florence">Florence</option>
-        <option value="Tropea">Tropea</option>
         <option value="Como">Como</option>
+        <option value="Cortina">Cortina</option>
+        <option value="Florence">Florence</option>
+        <option value="Pisa">Pisa</option>
         <option value="Rome">Rome</option>
+        <option value="Trieste">Trieste</option>
+        <option value="Tropea">Tropea</option>
       </optgroup>
       <optgroup label="Slovenia">
         <option value="Liubliana">Liubliana</option>
@@ -1635,6 +1638,7 @@
     //    specific" source available through a free API.
     const locations = {
       Kyiv: { lat: 50.4328, lon: 30.46875, model: 'icon_eu', modelLabel: 'ICON-EU (7km) — best available for Ukraine' },
+      "Kamianets-Podilskyi": { lat: 48.683787, lon: 26.580789, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
       Yasinia: { lat: 48.2742, lon: 24.3686, model: 'icon_d2', modelLabel: 'ICON-D2 (2km, Carpathians)' },
       Dragobrat: { lat: 48.1826, lon: 24.3811, model: 'icon_d2', modelLabel: 'ICON-D2 (2km, Carpathians)' },
       Bukovel: { lat: 48.3557, lon: 24.4193, model: 'icon_d2', modelLabel: 'ICON-D2 (2km, Carpathians)' },
