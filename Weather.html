@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>16-Day Weather Forecast (GFS)</title>
+  <title>Weather Forecast</title>
+  <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -298,25 +299,193 @@
       }
 
     }
+    .forecast-mode-switcher {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .forecast-mode-options {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      background: rgba(226, 232, 240, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .forecast-mode-button {
+      min-width: 76px;
+      min-height: 40px;
+      padding: 7px 16px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .forecast-mode-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .forecast-mode-button:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.28);
+      outline-offset: 2px;
+    }
+
+    .forecast-mode-button.is-active {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.25);
+    }
+
+    .forecast-page[hidden] {
+      display: none !important;
+    }
+
+    #short-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 14px clamp(14px, 3vw, 24px);
+      background: var(--panel-strong);
+      border-bottom: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(12px);
+    }
+
+    #short-top-bar > h2 {
+      flex: 1 1 320px;
+      min-width: 240px;
+      line-height: 1.25;
+    }
+
+    #short-chart-container {
+      height: clamp(420px, 85dvh, 920px);
+      width: calc(100% - 36px);
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-strong);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-lg);
+      margin: 18px 18px 24px;
+    }
+
+    #short-forecast label::before {
+      content: none;
+    }
+
+    @media (max-width: 768px) {
+      .forecast-mode-switcher {
+        width: 100%;
+        padding: 0;
+      }
+
+      .forecast-mode-options {
+        flex: 1;
+        width: 100%;
+        max-width: none;
+      }
+
+      .forecast-mode-button {
+        flex: 1;
+        min-width: 0;
+      }
+
+      #short-top-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 14px 16px;
+      }
+
+      #short-top-bar > h2 {
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
+      }
+
+      #short-chart-container {
+        height: auto;
+        min-height: 0;
+        padding: 14px;
+        margin: 14px 12px 18px;
+        width: calc(100% - 24px);
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #short-forecast-chart {
+        width: max(100%, 900px) !important;
+        min-width: 900px;
+        height: clamp(300px, 52dvh, 500px) !important;
+      }
+    }
+
   </style>
 </head>
 
 <body>
-  <div id="top-bar">
+  <section id="long-forecast" class="forecast-page" role="tabpanel">
+<div id="top-bar">
     <label for="location">Location:&nbsp;</label>
     <select id="location">
-      <option value="Kyiv">Kyiv</option>
-      <option value="Yasinia">Yasinia</option>
-      <option value="Dragobrat">Dragobrat</option>
-      <option value="Bukovel">Bukovel</option>
-	  <option value="Odesa">Odesa</option>
-	  <option value="Voznesensk">Voznesensk</option>
-	  <option value="Yenot">Yenot</option>
+      <optgroup label="Ukraine">
+        <option value="Bukovel">Bukovel</option>
+        <option value="Dragobrat">Dragobrat</option>
+        <option value="Kamianets-Podilskyi">Kamianets-Podilskyi</option>
+        <option value="Kyiv" selected>Kyiv</option>
+        <option value="Odesa">Odesa</option>
+        <option value="Voznesensk">Voznesensk</option>
+        <option value="Yasinia">Yasinia</option>
+        <option value="Yenot">Yenot</option>
+      </optgroup>
+      <optgroup label="Italy">
+        <option value="Como">Como</option>
+        <option value="Cortina">Cortina</option>
+        <option value="Florence">Florence</option>
+        <option value="Pisa">Pisa</option>
+        <option value="Rome">Rome</option>
+        <option value="Trieste">Trieste</option>
+        <option value="Tropea">Tropea</option>
+      </optgroup>
+      <optgroup label="Slovenia">
+        <option value="Liubliana">Liubliana</option>
+      </optgroup>
+      <optgroup label="Hungary">
+        <option value="Budapest">Budapest</option>
+      </optgroup>
+      <optgroup label="Spain">
+        <option value="CalaD'Or">Cala d'Or</option>
+      </optgroup>
     </select>
+    <nav class="forecast-mode-switcher" aria-label="Forecast length">
+      <div class="forecast-mode-options" role="tablist" aria-label="Forecast length">
+        <button type="button" class="forecast-mode-button is-active" data-forecast-mode="long" role="tab" aria-selected="true" aria-controls="long-forecast">Long</button>
+        <button type="button" class="forecast-mode-button" data-forecast-mode="short" role="tab" aria-selected="false" aria-controls="short-forecast">Short</button>
+      </div>
+    </nav>
     <div class="view-toggle" role="group" aria-label="Chart view">
       <button type="button" class="view-btn is-active" data-view="temperature">Temperature</button>
       <button type="button" class="view-btn" data-view="clouds">Clouds</button>
       <button type="button" class="view-btn" data-view="wind">Wind</button>
+      <button type="button" class="view-btn" data-view="moon">Moon</button>
     </div>
     <h2 id="chart-title">Kyiv 16-Day Weather Forecast (GFS)</h2>
   </div>
@@ -325,25 +494,75 @@
     <canvas id="forecastChart"></canvas>
   </div>
 
+  </section>
+
   <script>
+    (function initLongForecast() {
     const locations = {
       Kyiv: { lat: 50.4328, lon: 30.46875 },
+      "Kamianets-Podilskyi": { lat: 48.683787, lon: 26.580789 },
       Yasinia: { lat: 48.2742, lon: 24.3686 },
       Dragobrat: { lat: 48.1826, lon: 24.3811 },
       Bukovel: { lat: 48.3557, lon: 24.4193 },
-	  Odesa: { lat: 46.4825, lon: 30.7233 },
+	  Odesa: { lat: 46.4825, lon: 30.7233, marine: true },
 	  Voznesensk: { lat: 47.5647, lon: 31.3364 },
-	  Yenot: { "lat": 48.1733153, "lon": 24.8654665 }
+	  Yenot: { "lat": 48.1733153, "lon": 24.8654665 },
+	  Trieste: { lat: 45.6495, lon: 13.7768, marine: true },
+	  Cortina: { lat: 46.5405, lon: 12.1357 },
+	  Pisa: { lat: 43.7228, lon: 10.4017 },
+	  Florence: { lat: 43.7696, lon: 11.2558 },
+	  Tropea: { lat: 38.6761, lon: 15.8986, marine: true },
+	  Como: { lat: 45.8081, lon: 9.0852 },
+	  Rome: { lat: 41.9028, lon: 12.4964 },
+	  Liubliana: { lat: 46.0569, lon: 14.5058 },
+	  Budapest: { lat: 47.4979, lon: 19.0402 },
+	  "CalaD'Or": { lat: 39.3667, lon: 3.2333, marine: true }
     };
 
     let chart; // Store chart instance
     let currentView = "temperature";
     let currentLocation = "Kyiv";
+    let hasMarineData = false;
     const MOBILE_BREAKPOINT = 768;
     let wasMobileViewport = window.innerWidth <= MOBILE_BREAKPOINT;
 
     function isMobileViewport() {
       return window.innerWidth <= MOBILE_BREAKPOINT;
+    }
+
+    async function fetchJson(url, context) {
+      const response = await fetch(url);
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || data.error) {
+        const reason = data?.reason || `${response.status} ${response.statusText}`;
+        throw new Error(`${context}: ${reason}`);
+      }
+      return data;
+    }
+
+    function showLongForecastError(error) {
+      console.error('Long forecast fetch failed:', error);
+      document.getElementById("chart-title").textContent = `Unable to load ${currentLocation} forecast: ${error.message}`;
+    }
+
+    // Reference new moon: 2000-01-06 18:14 UTC. Phase 0 = new moon, 0.5 = full moon.
+    const SYNODIC_MONTH_DAYS = 29.53058867;
+    const KNOWN_NEW_MOON_UTC = Date.UTC(2000, 0, 6, 18, 14, 0);
+
+    function getMoonPhase(date) {
+      const diffDays = (date.getTime() - KNOWN_NEW_MOON_UTC) / 86400000;
+      let phase = (diffDays % SYNODIC_MONTH_DAYS) / SYNODIC_MONTH_DAYS;
+      if (phase < 0) phase += 1;
+      return phase;
+    }
+
+    function moonPhaseIcon(phase) {
+      const icons = ["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"];
+      return icons[Math.round(phase * 8) % 8];
+    }
+
+    function moonIllumination(phase) {
+      return (1 - Math.cos(2 * Math.PI * phase)) / 2 * 100;
     }
 
     function applyResponsiveChartOptions() {
@@ -391,26 +610,50 @@
       const loc = locations[locationName];
 
       // Запит на GFS
-      const gfsUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,cloud_cover_mean,wind_speed_10m_max&timezone=Europe/Kiev&forecast_days=16`;
-      const gfsRes = await fetch(gfsUrl);
-      const gfsData = await gfsRes.json();
+      const gfsUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,cloud_cover_mean,wind_speed_10m_max&timezone=auto&forecast_days=16`;
 
       // Запит на ECMWF
-      const ecmwfUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe/Kiev&forecast_days=16`;
-      const ecmwfRes = await fetch(ecmwfUrl);
-      const ecmwfData = await ecmwfRes.json();
+      const ecmwfUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=16`;
 
       // Запит на GFS hourly (для детальної інформації на всі 16 днів)
-      const gfsHourlyUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,cloud_cover,wind_speed_10m&timezone=Europe/Kiev&forecast_days=16`;
-      const gfsHourlyRes = await fetch(gfsHourlyUrl);
-      const gfsHourlyData = await gfsHourlyRes.json();
+      const gfsHourlyUrl = `https://api.open-meteo.com/v1/gfs?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,cloud_cover,wind_speed_10m,precipitation,wind_direction_10m&timezone=auto&forecast_days=16`;
 
       // Запит на ECMWF hourly (для детальної інформації на всі 16 днів)
-      const ecmwfHourlyUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m&timezone=Europe/Kiev&forecast_days=16`;
-      const ecmwfHourlyRes = await fetch(ecmwfHourlyUrl);
-      const ecmwfHourlyData = await ecmwfHourlyRes.json();
+      const ecmwfHourlyUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,precipitation&timezone=auto&forecast_days=16`;
+
+      const [gfsData, ecmwfData, gfsHourlyData, ecmwfHourlyData] = await Promise.all([
+        fetchJson(gfsUrl, 'GFS daily forecast'),
+        fetchJson(ecmwfUrl, 'ECMWF daily forecast'),
+        fetchJson(gfsHourlyUrl, 'GFS hourly forecast'),
+        fetchJson(ecmwfHourlyUrl, 'ECMWF hourly forecast')
+      ]);
+
+      let seaSurfaceTemps = null;
+      hasMarineData = false;
+      if (loc.marine) {
+        try {
+          const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&hourly=sea_surface_temperature&timezone=auto&forecast_days=16`;
+          const marineData = await fetchJson(marineUrl, 'Marine forecast');
+          const hourlySST = marineData.hourly?.sea_surface_temperature ?? null;
+          if (hourlySST && hourlySST.length > 0) {
+            const dailySST = [];
+            for (let d = 0; d < 16; d++) {
+              const slice = hourlySST.slice(d * 24, (d + 1) * 24).filter(v => v !== null);
+              dailySST.push(slice.length > 0 ? slice.reduce((a, b) => a + b, 0) / slice.length : null);
+            }
+            if (dailySST.some(v => v !== null)) {
+              seaSurfaceTemps = dailySST;
+              hasMarineData = true;
+            }
+          }
+        } catch (e) {
+          console.warn('Marine API fetch failed:', e);
+        }
+      }
 
       const dates = gfsData.daily.time;
+      const moonPhases = dates.map(date => getMoonPhase(new Date(`${date}T12:00:00Z`)));
+      const moonIllum = moonPhases.map(moonIllumination);
       const tempMaxGFS = gfsData.daily.temperature_2m_max;
       const tempMinGFS = gfsData.daily.temperature_2m_min;
       const precipGFS = gfsData.daily.precipitation_sum;
@@ -440,8 +683,11 @@
       const hourlyTemps = gfsHourlyData.hourly.temperature_2m;
       const hourlyCloudCover = gfsHourlyData.hourly.cloud_cover;
       const hourlyWindSpeed = gfsHourlyData.hourly.wind_speed_10m;
+      const hourlyWindDir = gfsHourlyData.hourly.wind_direction_10m;
+      const hourlyPrecip = gfsHourlyData.hourly.precipitation;
       const ecmwfHourlyTimes = ecmwfHourlyData.hourly.time;
       const ecmwfHourlyTemps = ecmwfHourlyData.hourly.temperature_2m;
+      const ecmwfHourlyPrecip = ecmwfHourlyData.hourly.precipitation;
       
       // Create array matching daily labels length, with hourly values interpolated for all days
       const hourlyDataForChart = [];
@@ -480,7 +726,10 @@
 
       const mixedCloudPoints = [];
       const mixedWindPoints = [];
+      const hourlyPrecipPoints = [];
+      const hourlyPrecipECMWFPoints = [];
       const hourlyLimit = Math.min(dates.length * 24, hourlyTimes.length);
+      const ecmwfHourlyLimit = Math.min(dates.length * 24, ecmwfHourlyTimes.length);
       for (let i = 0; i < hourlyLimit; i++) {
         const hourTime = new Date(hourlyTimes[i]);
         const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
@@ -493,8 +742,25 @@
         mixedWindPoints.push({
           x: xPos,
           y: hourlyWindSpeed[i],
-          t: hourlyTimes[i].replace('T', ' ')
+          t: hourlyTimes[i].replace('T', ' '),
+          d: hourlyWindDir[i]
         });
+      }
+      // 2-hour buckets for GFS precipitation (doubles bar width)
+      for (let i = 0; i < hourlyLimit; i += 2) {
+        const hourTime = new Date(hourlyTimes[i]);
+        const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
+        const xPos = ((hoursFromStart + 1) / 24) - 0.5; // centre of 2-hr block
+        const val = (hourlyPrecip[i] || 0) + (i + 1 < hourlyLimit ? (hourlyPrecip[i + 1] || 0) : 0);
+        hourlyPrecipPoints.push({ x: xPos, y: val });
+      }
+      // 2-hour buckets for ECMWF precipitation
+      for (let i = 0; i < ecmwfHourlyLimit; i += 2) {
+        const hourTime = new Date(ecmwfHourlyTimes[i]);
+        const hoursFromStart = (hourTime - hourlyBaseTime) / 36e5;
+        const xPos = ((hoursFromStart + 1) / 24) - 0.5;
+        const val = (ecmwfHourlyPrecip?.[i] || 0) + (i + 1 < ecmwfHourlyLimit ? (ecmwfHourlyPrecip?.[i + 1] || 0) : 0);
+        hourlyPrecipECMWFPoints.push({ x: xPos, y: val });
       }
 
       const pointFromIndex = (idx, times, temps) => {
@@ -537,6 +803,13 @@
         }
       }
       
+
+      function dirToArrow(deg) {
+        // deg = meteorological direction (where wind comes FROM)
+        // arrow points toward the wind's origin so you read "wind from NE" as ↗
+        const arrows = ['↑','↗','→','↘','↓','↙','←','↖'];
+        return arrows[Math.round(deg / 45) % 8];
+      }
 
       function getWeatherIcon(temp, prob) {
         if (temp < 0) return "❄️";
@@ -593,6 +866,58 @@
           drawPointLabels(gfsDailyMinPoints, '#1b5e20', 12);
           drawPointLabels(ecmwfDailyMaxPoints, '#00695c', -24);
           drawPointLabels(ecmwfDailyMinPoints, '#00695c', 24);
+
+          ctx.restore();
+        }
+      };
+
+      const windArrowPlugin = {
+        id: 'windArrows',
+        afterDatasetsDraw(chart) {
+          if (isMobile) return;
+          if (currentView !== 'wind') return;
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y4;
+          if (!xScale || !yScale) return;
+
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = 'bold 14px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = 'rgba(30, 64, 175, 0.9)';
+
+          for (let i = 0; i < mixedWindPoints.length; i++) {
+            if (i % 3 !== 0) continue;
+            const p = mixedWindPoints[i];
+            if (!p || p.d == null) continue;
+            const x = xScale.getPixelForValue(p.x);
+            const y = yScale.getPixelForValue(p.y) - 6;
+            ctx.fillText(dirToArrow(p.d), x, y);
+          }
+
+          ctx.restore();
+        }
+      };
+
+      const moonIconPlugin = {
+        id: 'moonIcons',
+        afterDraw(chart) {
+          const xScale = chart.scales.x;
+          if (!xScale || !chart.chartArea) return;
+
+          const ctx = chart.ctx;
+          const iconSize = isMobile ? 18 : 24;
+          const y = chart.chartArea.top + (isMobile ? 13 : 17);
+          ctx.save();
+          ctx.font = `${iconSize}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          for (let i = 0; i < moonPhases.length; i++) {
+            const x = xScale.getPixelForValue(i);
+            ctx.fillText(moonPhaseIcon(moonPhases[i]), x, y);
+          }
 
           ctx.restore();
         }
@@ -790,27 +1115,60 @@
                 clip: false
               }
             },
-            // GFS Precipitation
+            // GFS Precipitation (hourly)
             {
               type: 'bar',
               label: 'GFS Precipitation (mm)',
               viewGroup: 'temperature',
-              data: precipGFS,
-              backgroundColor: 'rgba(54, 162, 235, 0.6)',
+              data: hourlyPrecipPoints,
+              backgroundColor: 'rgba(54, 162, 235, 0.8)',
               borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1,
-              yAxisID: 'y2'
+              borderWidth: 0,
+              yAxisID: 'y2',
+              xAxisID: 'xHourly',
+              parsing: false,
+              maxBarThickness: 8,
+              datalabels: { display: false }
             },
-            // ECMWF Precipitation
+            // ECMWF Precipitation (hourly)
             {
               type: 'bar',
               label: 'ECMWF Precipitation (mm)',
               viewGroup: 'temperature',
-              data: precipECMWF,
-              backgroundColor: 'rgba(153, 204, 255, 0.6)', // світліший синій
-              borderColor: 'rgba(153, 204, 255, 1)',
-              borderWidth: 1,
-              yAxisID: 'y2'
+              data: hourlyPrecipECMWFPoints,
+              backgroundColor: 'rgba(255, 140, 0, 0.75)',
+              borderColor: 'rgba(255, 140, 0, 1)',
+              borderWidth: 0,
+              yAxisID: 'y2',
+              xAxisID: 'xHourly',
+              parsing: false,
+              maxBarThickness: 8,
+              datalabels: { display: false }
+            },
+            // Invisible daily dataset — carries weather icon + probability labels
+            {
+              type: 'bar',
+              label: 'Precip Labels',
+              viewGroup: 'temperature',
+              data: precipGFS,
+              backgroundColor: 'rgba(0,0,0,0)',
+              borderColor: 'rgba(0,0,0,0)',
+              borderWidth: 0,
+              yAxisID: 'y_label_carrier',
+              datalabels: {
+                display: !isMobile,
+                formatter: function(value, context) {
+                  const prob = precipProb[context.dataIndex];
+                  const temp = tempMaxGFS[context.dataIndex];
+                  const icon = getWeatherIcon(temp, prob);
+                  return prob > 0 ? `${icon} ${prob}%` : icon;
+                },
+                align: 'end',
+                anchor: 'start',
+                offset: 5,
+                color: '#000',
+                font: { weight: 'bold', size: isMobile ? 13 : 17 }
+              }
             },
             // GFS Cloud Cover
             {
@@ -843,6 +1201,42 @@
               xAxisID: 'x',
               tension: 0.3,
               parsing: false
+            },
+            // Sea Surface Temperature (coastal locations only)
+            {
+              type: 'line',
+              label: 'Sea Surface Temp (°C)',
+              viewGroup: 'temperature',
+              marineOnly: true,
+              data: seaSurfaceTemps || [],
+              hidden: !hasMarineData,
+              borderColor: 'rgba(0, 119, 190, 0.9)',
+              backgroundColor: 'rgba(0, 119, 190, 0.08)',
+              borderDash: [6, 3],
+              borderWidth: 2.5,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              yAxisID: 'y',
+              xAxisID: 'x',
+              tension: 0.4,
+              datalabels: { display: false }
+            },
+            // Moon Phase Illumination (per day)
+            {
+              type: 'line',
+              label: 'Moon Illumination (%)',
+              viewGroup: 'moon',
+              data: moonIllum,
+              borderColor: 'rgba(100, 116, 139, 0.9)',
+              backgroundColor: 'rgba(100, 116, 139, 0.15)',
+              borderWidth: 2.5,
+              pointRadius: isMobile ? 0 : 3,
+              pointHoverRadius: isMobile ? 0 : 5,
+              yAxisID: 'y5',
+              xAxisID: 'x',
+              tension: 0.3,
+              fill: true,
+              datalabels: { display: false }
             }
           ]
         },
@@ -858,7 +1252,8 @@
                   const dataset = data && data.datasets ? data.datasets[item.datasetIndex] : null;
                   if (!dataset) return false;
                   if (dataset.viewGroup && dataset.viewGroup !== currentView) return false;
-                  return !(item.text.includes('Hourly Min') || item.text.includes('Hourly Max'));
+                  if (dataset.marineOnly && !hasMarineData) return false;
+                  return !(item.text.includes('Hourly Min') || item.text.includes('Hourly Max') || item.text === 'Precip Labels');
                 },
                 font: {
                   size: isMobile ? 10 : 12
@@ -889,7 +1284,7 @@
               display: function (context) {
                 if (isMobile) return false;
                 const label = context.chart.data.datasets[context.datasetIndex].label;
-                return label.includes("Precipitation (mm)") || label.includes("Cloud Cover (%)");
+                return label.includes("Cloud Cover (%)");
               },
               formatter: function (value, context) {
                 const label = context.chart.data.datasets[context.datasetIndex].label;
@@ -902,19 +1297,14 @@
                   return cloud !== null ? getSkyIcon(cloud) : null;
                 }
                 if (label.includes("GFS Precipitation")) {
+                  return null;
+                }
+
+                if (label === 'ECMWF Precipitation (mm)') {
                   const prob = precipProb[context.dataIndex];
                   const temp = tempMaxGFS[context.dataIndex];
                   const icon = getWeatherIcon(temp, prob);
                   return prob > 0 ? `${icon} ${prob}%` : icon;
-                }
-
-                if (label.includes("ECMWF Precipitation")) {
-                  const precipAmount = precipECMWF[context.dataIndex];
-                  if (precipAmount > 0) {
-                    return "🌧️";
-                  } else {
-                    return "☀️";
-                  }
                 }
 
                 return null;
@@ -964,7 +1354,7 @@
                 size: function (context) {
                   const label = context.chart.data.datasets[context.datasetIndex].label;
                   if (label.includes("Hourly")) return isMobile ? 10 : 12;
-                  if (label.includes("Cloud Cover (%)")) return isMobile ? 10 : 12;
+                  if (label.includes("Cloud Cover (%)")) return isMobile ? 14 : 18;
                   return isMobile ? 9 : 11;
                 }
               },
@@ -989,10 +1379,14 @@
               },
               grid: {
                 color: function (context) {
-                  return context.tick.value === 0 ? '#007BFF' : Chart.defaults.borderColor;
+                  if (context.tick.value === 0) return '#007BFF';
+                  return context.tick.value % 10 === 0
+                    ? 'rgba(71, 85, 105, 0.55)'
+                    : Chart.defaults.borderColor;
                 },
                 lineWidth: function (context) {
-                  return context.tick.value === 0 ? 3 : 1;
+                  if (context.tick.value === 0) return 3;
+                  return context.tick.value % 10 === 0 ? 2 : 1;
                 }
               }
             },
@@ -1000,6 +1394,7 @@
               type: 'linear',
               position: 'right',
               beginAtZero: true,
+              max: 15,
               title: {
                 display: !isMobile,
                 text: 'Precipitation (mm)'
@@ -1050,6 +1445,25 @@
               },
               offset: true
             },
+            y5: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: !isMobile,
+                text: 'Moon Illumination (%)'
+              },
+              ticks: {
+                font: {
+                  size: isMobile ? 10 : 12
+                }
+              },
+              grid: {
+                drawOnChartArea: false
+              },
+              offset: true
+            },
             x: {
               offset: true,
               ticks: {
@@ -1086,6 +1500,7 @@
               position: 'bottom',
               min: -0.5,
               max: dates.length - 0.5,
+              offset: false,
               display: false,
               grid: {
                 drawOnChartArea: false
@@ -1093,11 +1508,18 @@
               ticks: {
                 display: false
               }
+            },
+            y_label_carrier: {
+              type: 'linear',
+              position: 'right',
+              display: false,
+              beginAtZero: true,
+              grid: { drawOnChartArea: false }
             }
 
           }
         },
-        plugins: [hourlyLabelPlugin, ChartDataLabels]
+        plugins: [hourlyLabelPlugin, windArrowPlugin, moonIconPlugin, ChartDataLabels]
       });
 
       applyView(currentView);
@@ -1108,7 +1530,7 @@
     }
 
     function setActiveViewButton(view) {
-      const buttons = document.querySelectorAll(".view-btn");
+      const buttons = document.querySelectorAll("#long-forecast .view-btn");
       buttons.forEach((button) => {
         const isActive = button.dataset.view === view;
         button.classList.toggle("is-active", isActive);
@@ -1121,23 +1543,25 @@
 
       chart.data.datasets.forEach((dataset) => {
         if (!dataset.viewGroup) return;
+        if (dataset.marineOnly && !hasMarineData) { dataset.hidden = true; return; }
         dataset.hidden = dataset.viewGroup !== view;
       });
 
       if (chart.options.scales.y2) chart.options.scales.y2.display = view === "temperature";
       if (chart.options.scales.y3) chart.options.scales.y3.display = view === "clouds";
       if (chart.options.scales.y4) chart.options.scales.y4.display = view === "wind";
+      if (chart.options.scales.y5) chart.options.scales.y5.display = view === "moon";
 
       chart.update();
     }
 
-    fetchWeather("Kyiv"); // Initial load
+    fetchWeather("Kyiv").catch(showLongForecastError); // Initial load
 
     document.getElementById("location").addEventListener("change", async (e) => {
-      await fetchWeather(e.target.value);
+      await fetchWeather(e.target.value).catch(showLongForecastError);
     });
 
-    document.querySelectorAll(".view-btn").forEach((button) => {
+    document.querySelectorAll("#long-forecast .view-btn").forEach((button) => {
       button.addEventListener("click", () => {
         const view = button.dataset.view;
         setActiveViewButton(view);
@@ -1151,12 +1575,574 @@
       const isMobileNow = isMobileViewport();
       if (isMobileNow !== wasMobileViewport) {
         wasMobileViewport = isMobileNow;
-        fetchWeather(currentLocation);
+        fetchWeather(currentLocation).catch(showLongForecastError);
       }
     });
 
 
+    })();
   </script>
+
+  <section id="short-forecast" class="forecast-page" role="tabpanel" hidden>
+<div id="short-top-bar">
+    <label for="short-location">Location:&nbsp;</label>
+    <select id="short-location">
+      <optgroup label="Ukraine">
+        <option value="Bukovel">Bukovel</option>
+        <option value="Dragobrat">Dragobrat</option>
+        <option value="Kamianets-Podilskyi">Kamianets-Podilskyi</option>
+        <option value="Kyiv" selected>Kyiv</option>
+        <option value="Odesa">Odesa</option>
+        <option value="Voznesensk">Voznesensk</option>
+        <option value="Yasinia">Yasinia</option>
+        <option value="Yenot">Yenot</option>
+      </optgroup>
+      <optgroup label="Italy">
+        <option value="Como">Como</option>
+        <option value="Cortina">Cortina</option>
+        <option value="Florence">Florence</option>
+        <option value="Pisa">Pisa</option>
+        <option value="Rome">Rome</option>
+        <option value="Trieste">Trieste</option>
+        <option value="Tropea">Tropea</option>
+      </optgroup>
+      <optgroup label="Slovenia">
+        <option value="Liubliana">Liubliana</option>
+      </optgroup>
+      <optgroup label="Hungary">
+        <option value="Budapest">Budapest</option>
+      </optgroup>
+      <optgroup label="Spain">
+        <option value="CalaD'Or">Cala d'Or</option>
+      </optgroup>
+    </select>
+    <nav class="forecast-mode-switcher" aria-label="Forecast length">
+      <div class="forecast-mode-options" role="tablist" aria-label="Forecast length">
+        <button type="button" class="forecast-mode-button" data-forecast-mode="long" role="tab" aria-selected="false" aria-controls="long-forecast">Long</button>
+        <button type="button" class="forecast-mode-button is-active" data-forecast-mode="short" role="tab" aria-selected="true" aria-controls="short-forecast">Short</button>
+      </div>
+    </nav>
+    <div class="view-toggle" role="group" aria-label="Chart view">
+      <button type="button" class="view-btn is-active" data-view="temperature">Temperature</button>
+      <button type="button" class="view-btn" data-view="clouds">Clouds</button>
+      <button type="button" class="view-btn" data-view="wind">Wind</button>
+    </div>
+    <h2 id="short-chart-title">Kyiv Hourly Forecast</h2>
+  </div>
+
+  <div id="short-chart-container">
+    <canvas id="short-forecast-chart"></canvas>
+  </div>
+  </section>
+
+  <script>
+    let shortForecastInitialized = false;
+
+    window.initShortForecast = function initShortForecast() {
+      if (shortForecastInitialized) return;
+      shortForecastInitialized = true;
+
+// Per-location model overrides. Open-Meteo's "best_match" is a generic
+    // auto-pick and is NOT a mountain/region-specific source. Where a
+    // higher-resolution regional model actually covers the location, we
+    // request it explicitly instead of relying on best_match:
+    //  - icon_eu: DWD's European model (~7km), covers all of Ukraine/Europe
+    //  - icon_d2: DWD's high-res model (~2km), domain covers the Alps
+    //    including the Dolomites — the closest thing to a "Dolomites
+    //    specific" source available through a free API.
+    const locations = {
+      Kyiv: { lat: 50.4328, lon: 30.46875, model: 'icon_eu', modelLabel: 'ICON-EU (7km) — best available for Ukraine' },
+      "Kamianets-Podilskyi": { lat: 48.683787, lon: 26.580789, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Yasinia: { lat: 48.2742, lon: 24.3686, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Dragobrat: { lat: 48.1826, lon: 24.3811, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Bukovel: { lat: 48.3557, lon: 24.4193, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Odesa: { lat: 46.4825, lon: 30.7233, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Voznesensk: { lat: 47.5647, lon: 31.3364, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Yenot: { lat: 48.1733153, lon: 24.8654665, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Trieste: { lat: 45.6495, lon: 13.7768, model: 'icon_d2', modelLabel: 'ICON-D2 (2km)' },
+      Cortina: {
+        lat: 46.5405, lon: 12.1357,
+        model: 'icon_eu', modelLabel: 'ICON-EU (7km, general)',
+        secondaryModel: 'icon_d2', secondaryLabel: 'ICON-D2 (2km, Dolomites/Alps regional)'
+      },
+      Pisa: { lat: 43.7228, lon: 10.4017, model: 'icon_d2', modelLabel: 'ICON-D2 (2km)' },
+      Florence: { lat: 43.7696, lon: 11.2558, model: 'icon_d2', modelLabel: 'ICON-D2 (2km)' },
+      Tropea: { lat: 38.6761, lon: 15.8986, model: 'best_match', modelLabel: 'Best match (outside ICON-D2 domain)' },
+      Como: { lat: 45.8081, lon: 9.0852, model: 'icon_d2', modelLabel: 'ICON-D2 (2km)' },
+      Rome: { lat: 41.9028, lon: 12.4964, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      Liubliana: { lat: 46.0569, lon: 14.5058, model: 'icon_d2', modelLabel: 'ICON-D2 (2km)' },
+      Budapest: { lat: 47.4979, lon: 19.0402, model: 'icon_eu', modelLabel: 'ICON-EU (7km)' },
+      "CalaD'Or": { lat: 39.3667, lon: 3.2333, model: 'best_match', modelLabel: 'Best match (outside ICON-D2 domain)' }
+    };
+
+    let currentView = "temperature";
+    let currentLocation = "Kyiv";
+    const SHORT_FORECAST_DAYS = 3;
+
+    function dirToArrow(deg) {
+      const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+      return arrows[Math.round(deg / 45) % 8];
+    }
+
+    function getWeatherIcon(temp, precip, isNight) {
+      if (temp < 0 && precip > 0) return "🌨️";
+      if (precip >= 2) return "🌧️";
+      // 🌦️ (sun-behind-cloud-rain) has no moon equivalent, so at night fall
+      // back to the plain rain-cloud icon instead of showing a sun.
+      if (precip > 0) return isNight ? "🌧️" : "🌦️";
+      return null;
+    }
+
+    function getSkyIcon(cloudCover, isNight) {
+      if (cloudCover >= 85) return "☁️";
+      if (cloudCover >= 60) return "🌥️";
+      if (cloudCover >= 30) return isNight ? "🌙" : "🌤️";
+      return isNight ? "🌙" : "☀️";
+    }
+
+    // isoTime and sunTimes[].dateStr are both raw "YYYY-MM-DDTHH:mm" / "YYYY-MM-DD"
+    // strings straight from the API (no Date() round-trip), so the date-key match
+    // can't be thrown off by the browser's local timezone reinterpreting them.
+    function isNightAt(isoTime, sunTimes) {
+      const dateStr = isoTime.slice(0, 10);
+      const day = sunTimes.find(s => s.dateStr === dateStr);
+      const date = new Date(isoTime);
+      if (!day) return date.getHours() < 6 || date.getHours() >= 21;
+      return date < day.sunrise || date > day.sunset;
+    }
+
+    async function fetchModel(lat, lon, model, days) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&timezone=auto&forecast_days=${days}&models=${model}&wind_speed_unit=ms`;
+      return fetchShortJson(url, `${model} forecast`);
+    }
+
+    async function fetchShortJson(url, context) {
+      const response = await fetch(url);
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || data.error) {
+        const reason = data?.reason || `${response.status} ${response.statusText}`;
+        throw new Error(`${context}: ${reason}`);
+      }
+      return data;
+    }
+
+    function showShortForecastError(error) {
+      console.error('Short forecast fetch failed:', error);
+      document.getElementById("short-chart-title").textContent = `Unable to load ${currentLocation} forecast: ${error.message}`;
+    }
+
+    async function fetchSunTimes(lat, lon, days) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=sunrise,sunset&timezone=auto&forecast_days=${days}`;
+      const data = await fetchShortJson(url, 'Sunrise and sunset forecast');
+      return data.daily.time.map((dateStr, i) => ({
+        dateStr,
+        sunrise: new Date(data.daily.sunrise[i]),
+        sunset: new Date(data.daily.sunset[i])
+      }));
+    }
+
+    let chart;
+
+    function extractSeries(data) {
+      return {
+        times: data.hourly.time,
+        temps: data.hourly.temperature_2m,
+        precip: data.hourly.precipitation,
+        cloudCover: data.hourly.cloud_cover,
+        windSpeed: data.hourly.wind_speed_10m,
+        windDir: data.hourly.wind_direction_10m
+      };
+    }
+
+    function renderChart(primary, primaryLabel, secondary, secondaryLabel, sunTimes) {
+      const times = primary.times;
+
+      const labels = times.map(t => {
+        const d = new Date(t);
+        const dayShort = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const hour = String(d.getHours()).padStart(2, '0') + ':00';
+        return [dayShort, hour];
+      });
+
+      const dayBoundaryLines = [];
+      let lastDay = null;
+      times.forEach((t, i) => {
+        const d = new Date(t).toDateString();
+        if (lastDay !== null && d !== lastDay) dayBoundaryLines.push(i);
+        lastDay = d;
+      });
+
+      const ctx = document.getElementById("short-forecast-chart").getContext("2d");
+      if (chart) chart.destroy();
+
+      const windArrowPlugin = {
+        id: 'windArrows',
+        afterDatasetsDraw(chart) {
+          if (currentView !== 'wind') return;
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y4;
+          if (!xScale || !yScale) return;
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = 'bold 14px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = 'rgba(30, 64, 175, 0.9)';
+          for (let i = 0; i < primary.windDir.length; i += 2) {
+            const x = xScale.getPixelForValue(i);
+            const y = yScale.getPixelForValue(primary.windSpeed[i]) - 6;
+            ctx.fillText(dirToArrow(primary.windDir[i]), x, y);
+          }
+          ctx.restore();
+        }
+      };
+
+      const dayBoundaryPlugin = {
+        id: 'dayBoundaries',
+        afterDraw(chart) {
+          const xScale = chart.scales.x;
+          const { top, bottom } = chart.chartArea;
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(29, 78, 216, 0.5)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 4]);
+          dayBoundaryLines.forEach(i => {
+            const x = xScale.getPixelForValue(i);
+            ctx.beginPath();
+            ctx.moveTo(x, top);
+            ctx.lineTo(x, bottom);
+            ctx.stroke();
+          });
+          ctx.restore();
+        }
+      };
+
+      const precipIconPlugin = {
+        id: 'precipIcons',
+        afterDatasetsDraw(chart) {
+          if (currentView !== 'temperature') return;
+          const xScale = chart.scales.x;
+          if (!xScale) return;
+          const { top } = chart.chartArea;
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = '26px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          for (let i = 0; i < primary.temps.length; i++) {
+            const night = isNightAt(times[i], sunTimes);
+            const icon = getWeatherIcon(primary.temps[i], primary.precip[i], night) || getSkyIcon(primary.cloudCover[i], night);
+            const x = xScale.getPixelForValue(i);
+            ctx.fillText(icon, x, top + 4);
+          }
+          ctx.restore();
+        }
+      };
+
+      const datasets = [
+        {
+          type: 'line',
+          label: `Temperature (°C) — ${primaryLabel}`,
+          viewGroup: 'temperature',
+          data: primary.temps,
+          borderColor: 'rgba(29, 78, 216, 0.9)',
+          backgroundColor: 'rgba(29, 78, 216, 0.15)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          yAxisID: 'y',
+          tension: 0.35,
+          fill: false
+        },
+        {
+          type: 'bar',
+          label: `Precipitation (mm) — ${primaryLabel}`,
+          viewGroup: 'temperature',
+          data: primary.precip,
+          backgroundColor: 'rgba(54, 162, 235, 0.75)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 0,
+          yAxisID: 'y2',
+          maxBarThickness: secondary ? 7 : 14
+        },
+        {
+          type: 'line',
+          label: `Cloud Cover (%) — ${primaryLabel}`,
+          viewGroup: 'clouds',
+          data: primary.cloudCover,
+          borderColor: 'rgba(71, 85, 105, 0.85)',
+          backgroundColor: 'rgba(71, 85, 105, 0.2)',
+          borderWidth: 2,
+          pointRadius: 0,
+          yAxisID: 'y3',
+          tension: 0.3
+        },
+        {
+          type: 'line',
+          label: `Wind Speed (m/s) — ${primaryLabel}`,
+          viewGroup: 'wind',
+          data: primary.windSpeed,
+          borderColor: 'rgba(30, 64, 175, 0.9)',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          borderWidth: 2,
+          pointRadius: 0,
+          yAxisID: 'y4',
+          tension: 0.3
+        }
+      ];
+
+      if (secondary) {
+        datasets.push(
+          {
+            type: 'line',
+            label: `Temperature (°C) — ${secondaryLabel}`,
+            viewGroup: 'temperature',
+            data: secondary.temps,
+            borderColor: 'rgba(220, 38, 38, 0.9)',
+            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+            borderDash: [4, 4],
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            yAxisID: 'y',
+            tension: 0.35,
+            fill: false
+          },
+          {
+            type: 'bar',
+            label: `Precipitation (mm) — ${secondaryLabel}`,
+            viewGroup: 'temperature',
+            data: secondary.precip,
+            backgroundColor: 'rgba(249, 115, 22, 0.75)',
+            borderColor: 'rgba(249, 115, 22, 1)',
+            borderWidth: 0,
+            yAxisID: 'y2',
+            maxBarThickness: 7
+          },
+          {
+            type: 'line',
+            label: `Cloud Cover (%) — ${secondaryLabel}`,
+            viewGroup: 'clouds',
+            data: secondary.cloudCover,
+            borderColor: 'rgba(220, 38, 38, 0.75)',
+            backgroundColor: 'rgba(220, 38, 38, 0.12)',
+            borderDash: [4, 4],
+            borderWidth: 2,
+            pointRadius: 0,
+            yAxisID: 'y3',
+            tension: 0.3
+          },
+          {
+            type: 'line',
+            label: `Wind Speed (m/s) — ${secondaryLabel}`,
+            viewGroup: 'wind',
+            data: secondary.windSpeed,
+            borderColor: 'rgba(220, 38, 38, 0.75)',
+            backgroundColor: 'rgba(220, 38, 38, 0.12)',
+            borderDash: [4, 4],
+            borderWidth: 2,
+            pointRadius: 0,
+            yAxisID: 'y4',
+            tension: 0.3
+          }
+        );
+      }
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                filter: function (item, data) {
+                  const dataset = data.datasets[item.datasetIndex];
+                  return dataset.viewGroup === currentView;
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: function (items) {
+                  if (!items.length) return '';
+                  return times[items[0].dataIndex].replace('T', ' ');
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              display: true,
+              title: { display: true, text: 'Temperature (°C)' },
+              grid: {
+                color: function (context) {
+                  if (context.tick.value === 0) return '#007BFF';
+                  return context.tick.value % 10 === 0
+                    ? 'rgba(71, 85, 105, 0.55)'
+                    : Chart.defaults.borderColor;
+                },
+                lineWidth: function (context) {
+                  if (context.tick.value === 0) return 3;
+                  return context.tick.value % 10 === 0 ? 2 : 1;
+                }
+              }
+            },
+            y2: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              max: 10,
+              display: currentView === 'temperature',
+              title: { display: true, text: 'Precipitation (mm)' },
+              grid: { drawOnChartArea: false }
+            },
+            y3: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              max: 100,
+              display: currentView === 'clouds',
+              title: { display: true, text: 'Cloud Cover (%)' },
+              grid: { drawOnChartArea: false }
+            },
+            y4: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              display: currentView === 'wind',
+              title: { display: true, text: 'Wind Speed (m/s)' },
+              grid: { drawOnChartArea: false }
+            },
+            x: {
+              ticks: {
+                autoSkip: false,
+                maxRotation: 0,
+                minRotation: 0,
+                callback: function (value, index) {
+                  const label = this.getLabelForValue(value);
+                  const isFirstOfDay = index === 0 || new Date(times[index]).toDateString() !== new Date(times[index - 1]).toDateString();
+                  if (index % 3 !== 0 && !isFirstOfDay) return '';
+                  return isFirstOfDay ? label : label[1];
+                }
+              },
+              grid: {
+                color: 'rgba(148, 163, 184, 0.25)'
+              }
+            }
+          }
+        },
+        plugins: [windArrowPlugin, dayBoundaryPlugin, precipIconPlugin]
+      });
+
+      applyView(currentView);
+    }
+
+    async function fetchWeather(locationName, days) {
+      currentLocation = locationName;
+      const loc = locations[locationName];
+
+      const primaryLabel = loc.modelLabel || loc.model;
+      let titleSuffix = primaryLabel;
+
+      const primaryRaw = await fetchModel(loc.lat, loc.lon, loc.model, days);
+      const primary = extractSeries(primaryRaw);
+      const sunTimes = await fetchSunTimes(loc.lat, loc.lon, days);
+
+      let secondary = null;
+      let secondaryLabel = null;
+      if (loc.secondaryModel) {
+        secondaryLabel = loc.secondaryLabel || loc.secondaryModel;
+        // ICON-D2's forecast horizon is only ~48-63h, so requesting 3 full
+        // days returns nulls for the tail. Cap it at 2 days so every point
+        // plotted is real data rather than a silent gap.
+        const secondaryDays = Math.min(days, 2);
+        const secondaryRaw = await fetchModel(loc.lat, loc.lon, loc.secondaryModel, secondaryDays);
+        secondary = extractSeries(secondaryRaw);
+        titleSuffix = `${primaryLabel} vs. ${secondaryLabel}`;
+      }
+
+      document.getElementById("short-chart-title").textContent = `${locationName} — ${days}-Day Hourly Forecast (${titleSuffix})`;
+      renderChart(primary, primaryLabel, secondary, secondaryLabel, sunTimes);
+    }
+
+    function setActiveViewButton(view) {
+      document.querySelectorAll("#short-forecast .view-btn").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.view === view);
+      });
+    }
+
+    function applyView(view) {
+      currentView = view;
+      if (!chart) return;
+      chart.data.datasets.forEach((dataset) => {
+        dataset.hidden = dataset.viewGroup !== currentView;
+      });
+      chart.options.scales.y2.display = currentView === "temperature";
+      chart.options.scales.y3.display = currentView === "clouds";
+      chart.options.scales.y4.display = currentView === "wind";
+      chart.update();
+    }
+
+    fetchWeather(currentLocation, SHORT_FORECAST_DAYS).catch(showShortForecastError);
+
+    document.getElementById("short-location").addEventListener("change", (e) => {
+      fetchWeather(e.target.value, SHORT_FORECAST_DAYS).catch(showShortForecastError);
+    });
+
+    document.querySelectorAll("#short-forecast .view-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveViewButton(button.dataset.view);
+        applyView(button.dataset.view);
+      });
+    });
+    };
+  </script>
+
+
+  <script>
+    (function initForecastSwitcher() {
+      const modeButtons = document.querySelectorAll(".forecast-mode-button");
+      const longForecast = document.getElementById("long-forecast");
+      const shortForecast = document.getElementById("short-forecast");
+
+      function showForecast(mode, updateHash = true) {
+        const showShort = mode === "short";
+        longForecast.hidden = showShort;
+        shortForecast.hidden = !showShort;
+
+        modeButtons.forEach((button) => {
+          const isActive = button.dataset.forecastMode === mode;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", String(isActive));
+          button.tabIndex = isActive ? 0 : -1;
+        });
+
+        document.title = showShort ? "Hourly Weather Forecast" : "16-Day Weather Forecast";
+        if (showShort) window.initShortForecast();
+
+        if (updateHash) {
+          history.replaceState(null, "", showShort ? "#short" : "#long");
+        }
+      }
+
+      modeButtons.forEach((button) => {
+        button.addEventListener("click", () => showForecast(button.dataset.forecastMode));
+      });
+
+      window.addEventListener("hashchange", () => {
+        showForecast(location.hash === "#short" ? "short" : "long", false);
+      });
+
+      showForecast(location.hash === "#short" ? "short" : "long", false);
+    })();
+  </script>
+
 </body>
 
 </html>
