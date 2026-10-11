@@ -138,6 +138,42 @@
       background-size: contain;
     }
 
+    input[type="date"] {
+      padding: 8px 12px;
+      min-height: 42px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      border-radius: var(--radius-md);
+      font: inherit;
+      background: #fff;
+      max-width: 100%;
+    }
+    .history-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      max-width: 620px;
+      margin: 0;
+      padding: 8px 12px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      border-radius: var(--radius-md);
+      background: rgba(239, 246, 255, 0.7);
+    }
+    .history-controls legend { padding: 0 5px; font-size: 12px; font-weight: 700; color: var(--text-muted); }
+    .history-date { display: flex; align-items: center; gap: 8px; }
+    .history-controls label::before { content: none; }
+    .history-shortcuts { display: flex; gap: 4px; }
+    .history-shortcuts .view-btn { white-space: nowrap; }
+    .history-controls #history-status { flex: 1 1 100%; font-size: 12px; line-height: 1.4; }
+    @media (max-width: 768px) {
+      .history-controls { width: 100%; padding: 6px 8px 8px; gap: 6px; }
+      .history-date, .history-shortcuts { width: 100%; }
+      .history-date input { flex: 1; min-width: 0; }
+      .history-shortcuts .view-btn { flex: 1; padding: 6px 8px; }
+    }
+    #history-status { flex-basis: 100%; color: var(--text-muted); font-size: 13px; }
+
     select {
       padding: 8px 12px;
       font-size: 14px;
@@ -347,6 +383,27 @@
       box-shadow: 0 6px 16px rgba(29, 78, 216, 0.25);
     }
 
+    .cloud-panel {
+      margin: 0 18px 24px;
+      padding: 12px 18px 8px;
+      border-radius: var(--radius-lg);
+      background: var(--panel-strong);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-soft);
+    }
+    .cloud-panel[hidden] { display: none; }
+    .cloud-panel-header { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 4px; color: #64748b; }
+    .cloud-panel-header h3 { margin: 0; font-size: 12px; font-weight: 700; }
+    .cloud-source { font-size: 12px; }
+    .cloud-source::before { content: ''; display: inline-block; width: 16px; height: 8px; margin-right: 5px; background: rgba(100, 116, 139, 0.32); border-radius: 3px; }
+    .cloud-chart-scroll { overflow-x: auto; }
+    .cloud-chart-inner { position: relative; height: 126px; }
+    @media (max-width: 768px) {
+      .cloud-panel { margin: 0 10px 16px; padding: 10px; }
+      #long-forecast .cloud-chart-inner { min-width: 680px; }
+      #short-forecast .cloud-chart-inner { min-width: 900px; }
+    }
+
     .forecast-page[hidden] {
       display: none !important;
     }
@@ -438,10 +495,256 @@
       }
     }
 
+
+    /* Reserve the remaining viewport for the main plot and align both canvases. */
+    .forecast-page {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      min-height: 0;
+      gap: 8px;
+      padding-bottom: 8px;
+    }
+    #top-bar, #short-top-bar { flex: 0 0 auto; }
+    #chart-container, #short-chart-container {
+      flex: 1 1 0;
+      height: auto;
+      min-height: 0;
+      margin: 0 18px;
+      padding: 12px;
+      width: calc(100% - 36px);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .main-chart-inner { position: relative; width: 100%; height: 100%; }
+    .cloud-panel { flex: 0 0 auto; margin: 0 18px; padding: 10px 12px; width: calc(100% - 36px); }
+    .cloud-chart-inner { height: 82px; }
+    #forecastChart, #short-forecast-chart { width: 100% !important; min-width: 0; height: 100% !important; }
+    @media (max-width: 768px) {
+      #top-bar, #short-top-bar { padding: 8px 12px; gap: 6px; flex-wrap: nowrap; }
+      #history-status { flex-basis: auto; }
+      #chart-container, #short-chart-container, .cloud-panel { margin: 0 10px; padding: 10px; width: calc(100% - 20px); }
+      #long-forecast .main-chart-inner, #long-forecast .cloud-chart-inner { min-width: 760px; }
+      #short-forecast .main-chart-inner, #short-forecast .cloud-chart-inner { min-width: 900px; }
+    }
+    @media (max-width: 480px) {
+      #long-forecast .main-chart-inner, #long-forecast .cloud-chart-inner { min-width: 680px; }
+    }
   </style>
 </head>
 
 <body>
+  <script>
+    function syncCloudStrip(mainId) {
+      const cloudId = mainId === 'forecastChart' ? 'long-cloud-chart' : 'short-cloud-chart';
+      const main = Chart.getChart(mainId);
+      const cloud = Chart.getChart(cloudId);
+      if (!main?.chartArea || !cloud?.chartArea || !main.width || !cloud.width) return;
+      for (let i = 0; i < 2; i++) {
+        const left = main.chartArea.left - cloud.chartArea.left;
+        const right = cloud.chartArea.right - main.chartArea.right;
+        if (Math.abs(left) < 0.5 && Math.abs(right) < 0.5) break;
+        const padding = cloud.options.layout.padding;
+        padding.left = Math.max(0, (padding.left || 0) + left);
+        padding.right = Math.max(0, (padding.right || 0) + right);
+        cloud.update('none');
+      }
+    }
+
+    function makeWeekendPlugin(times) {
+      const bands = [];
+      times.forEach((time, i) => {
+        const date = time.slice(0, 10);
+        if (!bands.length || bands[bands.length - 1].date !== date) bands.push({date, start: i - 0.5, end: i + 0.5});
+        else bands[bands.length - 1].end = i + 0.5;
+      });
+      return {
+        id: 'weekendBackground',
+        beforeDatasetsDraw(chart) {
+          const {ctx, chartArea: {left, right, top, bottom}, scales: {x}} = chart;
+          ctx.save();
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.045)';
+          for (const band of bands) {
+            if (![0, 6].includes(new Date(`${band.date}T12:00:00`).getDay())) continue;
+            const start = Math.max(left, x.getPixelForValue(band.start));
+            const end = Math.min(right, x.getPixelForValue(band.end));
+            ctx.fillRect(start, top, end - start, bottom - top);
+          }
+          ctx.restore();
+        }
+      };
+    }
+
+    function currentTimePosition(chart, times, timezone) {
+      const localNow = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: timezone || 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+      }).format(new Date()).replace(' ', 'T');
+      const hourKey = `${localNow.slice(0, 13)}:00`;
+      const hourIndex = times.indexOf(hourKey);
+      if (hourIndex < 0) return null;
+      const minute = Number(localNow.slice(14, 16)) / 60;
+      if (chart.canvas.id === 'forecastChart' || chart.canvas.id === 'long-cloud-chart') {
+        const hours = (new Date(hourKey) - new Date(times[0])) / 36e5 + minute;
+        return chart.canvas.id === 'forecastChart'
+          ? chart.scales.xHourly.getPixelForValue(hours / 24 - 0.5)
+          : chart.scales.x.getPixelForValue(hours);
+      }
+      return chart.scales.x.getPixelForValue(hourIndex + minute);
+    }
+
+    function makeCurrentTimePlugin(times, timezone) {
+      let refreshTimer;
+      return {
+        id: 'currentTimeMarker',
+        afterInit(chart) { refreshTimer = setInterval(() => chart.draw(), 60000); },
+        afterDestroy() { clearInterval(refreshTimer); },
+        afterDatasetsDraw(chart) {
+          const position = currentTimePosition(chart, times, timezone);
+          if (position === null) return;
+          const {ctx, chartArea: {left, right, top, bottom}} = chart;
+          if (position < left || position > right) return;
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(left, top, right - left, bottom - top);
+          ctx.clip();
+          ctx.strokeStyle = '#6366f1';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(position, top);
+          ctx.lineTo(position, bottom);
+          ctx.stroke();
+          ctx.restore();
+        }
+      };
+    }
+
+    Chart.register({
+      id: 'precipitationIntervalWidth',
+      beforeDatasetsUpdate(chart) {
+        for (const dataset of chart.data.datasets) {
+          if (!dataset.intervalHours) continue;
+          const x = chart.scales[dataset.xAxisID || 'x'];
+          const span = x.id === 'xHourly' ? dataset.intervalHours / 24 : dataset.intervalHours;
+          // Use the time scale directly: every model spans its complete interval.
+          dataset.barThickness = Math.abs(x.getPixelForValue(span) - x.getPixelForValue(0));
+        }
+      }
+    });
+
+    Chart.register({
+      id: 'pairedCloudLayout',
+      afterUpdate(chart) {
+        if (['forecastChart', 'short-forecast-chart'].includes(chart.canvas.id)) syncCloudStrip(chart.canvas.id);
+      },
+      resize(chart) {
+        if (['long-cloud-chart', 'short-cloud-chart'].includes(chart.canvas.id)) {
+          requestAnimationFrame(() => syncCloudStrip(chart.canvas.id === 'long-cloud-chart' ? 'forecastChart' : 'short-forecast-chart'));
+        }
+      }
+    });
+
+    function clearCloudStrip(id) {
+      Chart.getChart(id)?.destroy();
+      document.getElementById(id).closest('.cloud-panel').hidden = true;
+    }
+
+    function renderCloudStrip(id, times, covers, source, timezone) {
+      clearCloudStrip(id);
+      const canvas = document.getElementById(id);
+      const panel = canvas.closest('.cloud-panel');
+      panel.querySelector('.cloud-source').textContent = `покриття неба · ${source}`;
+      panel.hidden = false;
+      const days = [];
+      times.forEach((time, i) => {
+        const date = time.slice(0, 10);
+        if (!days.length || days[days.length - 1].date !== date) days.push({ date, start: i, end: i });
+        else days[days.length - 1].end = i;
+      });
+      const isWeekend = date => [0, 6].includes(new Date(`${date}T12:00:00`).getDay());
+      const dayBands = {
+        id: 'cloudDayBands',
+        beforeDatasetsDraw(chart) {
+          const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
+          ctx.save();
+          ctx.fillStyle = '#fff2b3';
+          ctx.fillRect(left, top, right - left, bottom - top);
+          ctx.restore();
+        },
+        afterDatasetsDraw(chart) {
+          const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
+          ctx.save();
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.035)';
+          for (const day of days) {
+            if (!isWeekend(day.date)) continue;
+            const start = Math.max(left, x.getPixelForValue(day.start - (id === 'long-cloud-chart' ? 0 : 0.5)));
+            const end = Math.min(right, x.getPixelForValue(day.end + (id === 'long-cloud-chart' ? 1 : 0.5)));
+            ctx.fillRect(start, top, end - start, bottom - top);
+          }
+          // Draw day dividers above the cloud fill so they remain visible at 100% cover.
+          ctx.strokeStyle = 'rgba(71, 85, 105, 0.45)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([]);
+          for (const day of days.slice(1)) {
+            const position = x.getPixelForValue(day.start - (id === 'long-cloud-chart' ? 0 : 0.5));
+            if (position < left || position > right) continue;
+            ctx.beginPath();
+            ctx.moveTo(position, top);
+            ctx.lineTo(position, bottom);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      };
+      const strip = new Chart(canvas, {
+        type: 'line',
+        data: { datasets: [{
+          label: 'Покриття неба',
+          data: times.map((time, i) => ({ x: id === 'long-cloud-chart' ? (new Date(time) - new Date(times[0])) / 36e5 : i, y: Number.isFinite(covers?.[i]) ? covers[i] : null })),
+          parsing: false,
+          borderColor: '#64748b', backgroundColor: '#cbd0d9',
+          borderWidth: 1.5, fill: 'origin', tension: 0.15, cubicInterpolationMode: 'monotone',
+          pointRadius: 0, pointHoverRadius: 3, spanGaps: false
+        }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          layout: { padding: { left: 0, right: 0 } },
+          interaction: { mode: 'nearest', axis: 'x', intersect: false },
+          plugins: {
+            legend: { display: false },
+            datalabels: { display: false },
+            tooltip: { callbacks: {
+              title: items => items.length ? times[items[0].dataIndex].replace('T', ' ') : '',
+              label: item => `Покриття неба: ${item.parsed.y}%`
+            } }
+          },
+          scales: {
+            y: { min: 0, max: 100, border: { display: false },
+              ticks: { stepSize: 50, callback: value => `${value}%`, color: '#64748b', font: { size: 10 } },
+              grid: { color: 'rgba(148, 163, 184, 0.18)', drawTicks: false }
+            },
+            x: { type: 'linear', min: id === 'long-cloud-chart' ? 0 : -0.5,
+              max: id === 'long-cloud-chart' ? times.length : times.length - 0.5,
+              display: false
+            }
+          }
+        },
+        plugins: [dayBands, makeCurrentTimePlugin(times, timezone)]
+      });
+      const mainId = id === 'long-cloud-chart' ? 'forecastChart' : 'short-forecast-chart';
+      syncCloudStrip(mainId);
+      const mainScroll = document.getElementById(mainId).closest('.main-chart-inner').parentElement;
+      const cloudScroll = canvas.closest('.cloud-chart-scroll');
+      if (!cloudScroll.dataset.scrollLinked) {
+        cloudScroll.dataset.scrollLinked = 'true';
+        mainScroll.addEventListener('scroll', () => { cloudScroll.scrollLeft = mainScroll.scrollLeft; });
+        cloudScroll.addEventListener('scroll', () => { mainScroll.scrollLeft = cloudScroll.scrollLeft; });
+      }
+      cloudScroll.scrollLeft = mainScroll.scrollLeft;
+      return strip;
+    }
+  </script>
   <section id="long-forecast" class="forecast-page" role="tabpanel">
 <div id="top-bar">
     <label for="location">Location:&nbsp;</label>
@@ -487,12 +790,32 @@
       <button type="button" class="view-btn" data-view="wind">Wind</button>
       <button type="button" class="view-btn" data-view="moon">Moon</button>
     </div>
+    <fieldset class="history-controls">
+      <legend>Історія погоди</legend>
+      <div class="history-date">
+        <label for="history-start">Від дати:</label>
+        <input type="date" id="history-start" min="1940-01-01" aria-describedby="history-status" />
+      </div>
+      <div class="history-shortcuts" role="group" aria-label="Швидкий вибір дати">
+        <button type="button" class="view-btn" data-history-years="3" aria-pressed="false">3 роки</button>
+        <button type="button" class="view-btn" data-history-years="2" aria-pressed="false">2 роки</button>
+        <button type="button" class="view-btn" data-history-years="1" aria-pressed="false">Рік</button>
+        <button type="button" class="view-btn is-active" id="history-forecast" aria-pressed="true">Сьогодні</button>
+      </div>
+      <span id="history-status" role="status" aria-live="polite"></span>
+    </fieldset>
     <h2 id="chart-title">Kyiv 16-Day Weather Forecast (GFS)</h2>
   </div>
 
   <div id="chart-container">
-    <canvas id="forecastChart"></canvas>
+    <div class="main-chart-inner"><canvas id="forecastChart"></canvas></div>
   </div>
+  <section class="cloud-panel" aria-labelledby="long-cloud-heading" hidden>
+    <div class="cloud-panel-header"><h3 id="long-cloud-heading">ХМАРНІСТЬ, %</h3><span class="cloud-source"></span></div>
+    <div class="cloud-chart-scroll" tabindex="0" aria-label="Графік хмарності за годинами">
+      <div class="cloud-chart-inner"><canvas id="long-cloud-chart" role="img" aria-label="Погодинне покриття неба хмарами від 0 до 100 відсотків"></canvas></div>
+    </div>
+  </section>
 
   </section>
 
@@ -518,6 +841,23 @@
 	  Budapest: { lat: 47.4979, lon: 19.0402 },
 	  "CalaD'Or": { lat: 39.3667, lon: 3.2333, marine: true }
     };
+
+    const historyStart = document.getElementById("history-start");
+    const historyStatus = document.getElementById("history-status");
+    let requestVersion = 0;
+    function dateKey(date) { return date.toISOString().slice(0, 10); }
+    function shiftDate(key, days) {
+      const date = new Date(`${key}T12:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + days);
+      return dateKey(date);
+    }
+    function todayKey() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+    // ERA5 has a five-day publication delay; require a complete 16-day interval.
+    historyStart.max = shiftDate(todayKey(), -20);
+    historyStatus.textContent = `Оберіть початок 16 днів історії (до ${historyStart.max}). Архів ERA5 оновлюється із затримкою близько 5 днів.`;
 
     let chart; // Store chart instance
     let currentView = "temperature";
@@ -583,7 +923,7 @@
         const rawLabel = this.getLabelForValue(value);
         if (Array.isArray(rawLabel)) {
           if (mobile) {
-            return rawLabel[0];
+            return [rawLabel[0], `${rawLabel[1].slice(8, 10)}/${rawLabel[1].slice(5, 7)}`];
           }
           return rawLabel;
         }
@@ -607,6 +947,17 @@
 
     async function fetchWeather(locationName) {
       currentLocation = locationName;
+      const version = ++requestVersion;
+      const start = historyStart.value;
+      const isHistory = Boolean(start);
+      const end = isHistory ? shiftDate(start, 15) : null;
+      if (isHistory && (!historyStart.checkValidity() || start > historyStart.max)) {
+        historyStatus.textContent = `Оберіть дату від 1940-01-01 до ${historyStart.max}, щоб отримати всі 16 днів.`;
+        return;
+      }
+      clearCloudStrip('long-cloud-chart');
+      historyStatus.textContent = 'Завантаження…';
+      if (chart) { chart.destroy(); chart = null; }
       const loc = locations[locationName];
 
       // Запит на GFS
@@ -621,16 +972,30 @@
       // Запит на ECMWF hourly (для детальної інформації на всі 16 днів)
       const ecmwfHourlyUrl = `https://api.open-meteo.com/v1/ecmwf?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,precipitation&timezone=auto&forecast_days=16`;
 
-      const [gfsData, ecmwfData, gfsHourlyData, ecmwfHourlyData] = await Promise.all([
+      let gfsData, ecmwfData, gfsHourlyData, ecmwfHourlyData;
+      if (isHistory) {
+        const archiveUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lon}&start_date=${start}&end_date=${end}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,cloud_cover_mean,wind_speed_10m_max&hourly=temperature_2m,cloud_cover,wind_speed_10m,precipitation,wind_direction_10m&timezone=auto&models=era5`;
+        gfsData = await fetchJson(archiveUrl, 'Historical weather');
+        if (gfsData.daily?.time?.length !== 16 || gfsData.hourly?.temperature_2m?.some(v => v === null)) {
+          throw new Error('The selected historical interval is not yet available in full. Choose an earlier date.');
+        }
+        gfsHourlyData = gfsData;
+        // Reuse the chart layout with a single historical source.
+        ecmwfData = { daily: { temperature_2m_max: [], temperature_2m_min: [], precipitation_sum: [] } };
+        ecmwfHourlyData = { hourly: { time: [], temperature_2m: [], precipitation: [] } };
+      } else {
+      [gfsData, ecmwfData, gfsHourlyData, ecmwfHourlyData] = await Promise.all([
         fetchJson(gfsUrl, 'GFS daily forecast'),
         fetchJson(ecmwfUrl, 'ECMWF daily forecast'),
         fetchJson(gfsHourlyUrl, 'GFS hourly forecast'),
         fetchJson(ecmwfHourlyUrl, 'ECMWF hourly forecast')
       ]);
+      }
+      if (version !== requestVersion) return;
 
       let seaSurfaceTemps = null;
       hasMarineData = false;
-      if (loc.marine) {
+      if (loc.marine && !isHistory) {
         try {
           const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&hourly=sea_surface_temperature&timezone=auto&forecast_days=16`;
           const marineData = await fetchJson(marineUrl, 'Marine forecast');
@@ -651,13 +1016,14 @@
         }
       }
 
+      if (version !== requestVersion) return;
       const dates = gfsData.daily.time;
       const moonPhases = dates.map(date => getMoonPhase(new Date(`${date}T12:00:00Z`)));
       const moonIllum = moonPhases.map(moonIllumination);
       const tempMaxGFS = gfsData.daily.temperature_2m_max;
       const tempMinGFS = gfsData.daily.temperature_2m_min;
       const precipGFS = gfsData.daily.precipitation_sum;
-      const precipProb = gfsData.daily.precipitation_probability_max;
+      const precipProb = gfsData.daily.precipitation_probability_max || [];
       const cloudCoverGFS = gfsData.daily.cloud_cover_mean;
       const windSpeedGFS = gfsData.daily.wind_speed_10m_max;
 
@@ -1121,13 +1487,14 @@
               label: 'GFS Precipitation (mm)',
               viewGroup: 'temperature',
               data: hourlyPrecipPoints,
-              backgroundColor: 'rgba(54, 162, 235, 0.8)',
+              backgroundColor: 'rgba(54, 162, 235, 0.45)',
               borderColor: 'rgba(54, 162, 235, 1)',
               borderWidth: 0,
               yAxisID: 'y2',
               xAxisID: 'xHourly',
               parsing: false,
-              maxBarThickness: 8,
+              intervalHours: 2,
+              grouped: false,
               datalabels: { display: false }
             },
             // ECMWF Precipitation (hourly)
@@ -1136,13 +1503,14 @@
               label: 'ECMWF Precipitation (mm)',
               viewGroup: 'temperature',
               data: hourlyPrecipECMWFPoints,
-              backgroundColor: 'rgba(255, 140, 0, 0.75)',
-              borderColor: 'rgba(255, 140, 0, 1)',
+              backgroundColor: 'rgba(30, 64, 175, 0.45)',
+              borderColor: 'rgba(30, 64, 175, 1)',
               borderWidth: 0,
               yAxisID: 'y2',
               xAxisID: 'xHourly',
               parsing: false,
-              maxBarThickness: 8,
+              intervalHours: 2,
+              grouped: false,
               datalabels: { display: false }
             },
             // Invisible daily dataset — carries weather icon + probability labels
@@ -1158,6 +1526,10 @@
               datalabels: {
                 display: !isMobile,
                 formatter: function(value, context) {
+                  if (isHistory) {
+                    const i = context.dataIndex;
+                    return value > 0 ? (tempMaxGFS[i] < 0 ? '🌨️' : '🌧️') : getSkyIcon(cloudCoverGFS[i]);
+                  }
                   const prob = precipProb[context.dataIndex];
                   const temp = tempMaxGFS[context.dataIndex];
                   const icon = getWeatherIcon(temp, prob);
@@ -1175,15 +1547,20 @@
               type: 'line',
               label: 'GFS Cloud Cover (%)',
               viewGroup: 'clouds',
+              hidden: true,
               data: mixedCloudPoints,
-              borderColor: 'rgba(71, 85, 105, 0.85)',
-              backgroundColor: 'rgba(71, 85, 105, 0.2)',
-              borderWidth: 2,
+              borderColor: 'rgba(71, 85, 105, 0.7)',
+              backgroundColor: 'rgba(100, 116, 139, 0.12)',
+              borderWidth: 1.5,
               pointRadius: 0,
-              pointHoverRadius: 0,
+              pointHoverRadius: 4,
+              pointHitRadius: 6,
               yAxisID: 'y3',
-              xAxisID: 'x',
-              tension: 0.3,
+              xAxisID: 'xHourly',
+              tension: 0,
+              fill: false,
+              order: 20,
+              datalabels: { display: false },
               parsing: false
             },
             // GFS Wind Speed
@@ -1243,6 +1620,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { left: 12 } },
           plugins: {
             legend: {
               display: !isMobile,
@@ -1411,21 +1789,22 @@
             y3: {
               type: 'linear',
               position: 'right',
-              beginAtZero: true,
+              min: 0,
               max: 100,
               title: {
                 display: !isMobile,
                 text: 'Cloud Cover (%)'
               },
               ticks: {
+                stepSize: 25,
+                callback: value => `${value}%`,
                 font: {
                   size: isMobile ? 10 : 12
                 }
               },
               grid: {
                 drawOnChartArea: false
-              },
-              offset: true
+              }
             },
             y4: {
               type: 'linear',
@@ -1481,7 +1860,7 @@
                   const rawLabel = this.getLabelForValue(value);
                   if (Array.isArray(rawLabel)) {
                     if (isMobile) {
-                      return rawLabel[0];
+                      return [rawLabel[0], `${rawLabel[1].slice(8, 10)}/${rawLabel[1].slice(5, 7)}`];
                     }
                     return rawLabel;
                   }
@@ -1519,18 +1898,28 @@
 
           }
         },
-        plugins: [hourlyLabelPlugin, windArrowPlugin, moonIconPlugin, ChartDataLabels]
+        plugins: [makeWeekendPlugin(dates), makeCurrentTimePlugin(hourlyTimes, gfsHourlyData.timezone), hourlyLabelPlugin, windArrowPlugin, moonIconPlugin, ChartDataLabels]
       });
 
+      if (isHistory) {
+        chart.data.datasets = chart.data.datasets.filter(dataset => !dataset.label?.includes('ECMWF'));
+        chart.data.datasets.forEach(dataset => { dataset.label = dataset.label.replace(/GFS/g, 'ERA5'); });
+      }
       applyView(currentView);
       applyResponsiveChartOptions();
+      renderCloudStrip('long-cloud-chart', hourlyTimes, hourlyCloudCover, isHistory ? 'ERA5' : 'GFS', gfsHourlyData.timezone);
 
-      document.getElementById("chart-title").textContent = `${locationName} 16-Day Weather Forecast (GFS + ECMWF)`;
+      document.getElementById("chart-title").textContent = isHistory
+        ? `${locationName} — ${start} – ${end} · Historical Weather (ERA5)`
+        : `${locationName} 16-Day Weather Forecast (GFS + ECMWF)`;
+      historyStatus.textContent = isHistory
+        ? 'Історична погода: реаналіз ERA5 за спостереженнями. Опади — кількість у мм; температура моря в архівному режимі недоступна.'
+        : 'Прогноз на 16 днів від сьогодні. Для минулої погоди оберіть дату.';
 
     }
 
     function setActiveViewButton(view) {
-      const buttons = document.querySelectorAll("#long-forecast .view-btn");
+      const buttons = document.querySelectorAll("#long-forecast .view-btn[data-view]");
       buttons.forEach((button) => {
         const isActive = button.dataset.view === view;
         button.classList.toggle("is-active", isActive);
@@ -1555,13 +1944,51 @@
       chart.update();
     }
 
-    fetchWeather("Kyiv").catch(showLongForecastError); // Initial load
+    async function reloadWeather(locationName = currentLocation) {
+      updateHistoryShortcuts();
+      const expectedVersion = requestVersion + 1;
+      try { await fetchWeather(locationName); }
+      catch (error) {
+        if (requestVersion !== expectedVersion) return;
+        showLongForecastError(error);
+        historyStatus.textContent = 'Не вдалося завантажити погоду. Спробуйте іншу дату або повторіть запит.';
+      }
+    }
+    historyStart.addEventListener('change', () => reloadWeather());
+    function historyDateYearsAgo(years) {
+      const today = todayKey();
+      const year = Number(today.slice(0, 4)) - years;
+      let previous = `${year}${today.slice(4)}`;
+      if (dateKey(new Date(`${previous}T12:00:00Z`)) !== previous) previous = `${year}-02-28`;
+      return previous;
+    }
+    function updateHistoryShortcuts() {
+      document.querySelectorAll('[data-history-years]').forEach(button => {
+        const active = historyStart.value === historyDateYearsAgo(Number(button.dataset.historyYears));
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      const todayButton = document.getElementById('history-forecast');
+      todayButton.classList.toggle('is-active', !historyStart.value);
+      todayButton.setAttribute('aria-pressed', String(!historyStart.value));
+    }
+    document.querySelectorAll('[data-history-years]').forEach(button => {
+      button.addEventListener('click', () => {
+        historyStart.value = historyDateYearsAgo(Number(button.dataset.historyYears));
+        reloadWeather();
+      });
+    });
+    document.getElementById('history-forecast').addEventListener('click', () => {
+      historyStart.value = '';
+      reloadWeather();
+    });
+    reloadWeather("Kyiv"); // Initial load
 
     document.getElementById("location").addEventListener("change", async (e) => {
-      await fetchWeather(e.target.value).catch(showLongForecastError);
+      await reloadWeather(e.target.value);
     });
 
-    document.querySelectorAll("#long-forecast .view-btn").forEach((button) => {
+    document.querySelectorAll("#long-forecast .view-btn[data-view]").forEach((button) => {
       button.addEventListener("click", () => {
         const view = button.dataset.view;
         setActiveViewButton(view);
@@ -1575,7 +2002,7 @@
       const isMobileNow = isMobileViewport();
       if (isMobileNow !== wasMobileViewport) {
         wasMobileViewport = isMobileNow;
-        fetchWeather(currentLocation).catch(showLongForecastError);
+        reloadWeather(currentLocation);
       }
     });
 
@@ -1631,8 +2058,14 @@
   </div>
 
   <div id="short-chart-container">
-    <canvas id="short-forecast-chart"></canvas>
+    <div class="main-chart-inner"><canvas id="short-forecast-chart"></canvas></div>
   </div>
+  <section class="cloud-panel" aria-labelledby="short-cloud-heading" hidden>
+    <div class="cloud-panel-header"><h3 id="short-cloud-heading">ХМАРНІСТЬ, %</h3><span class="cloud-source"></span></div>
+    <div class="cloud-chart-scroll" tabindex="0" aria-label="Графік хмарності за годинами">
+      <div class="cloud-chart-inner"><canvas id="short-cloud-chart" role="img" aria-label="Погодинне покриття неба хмарами від 0 до 100 відсотків"></canvas></div>
+    </div>
+  </section>
   </section>
 
   <script>
@@ -1745,6 +2178,7 @@
 
     function extractSeries(data) {
       return {
+        timezone: data.timezone,
         times: data.hourly.time,
         temps: data.hourly.temperature_2m,
         precip: data.hourly.precipitation,
@@ -1756,7 +2190,6 @@
 
     function renderChart(primary, primaryLabel, secondary, secondaryLabel, sunTimes) {
       const times = primary.times;
-
       const labels = times.map(t => {
         const d = new Date(t);
         const dayShort = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -1860,23 +2293,29 @@
           label: `Precipitation (mm) — ${primaryLabel}`,
           viewGroup: 'temperature',
           data: primary.precip,
-          backgroundColor: 'rgba(54, 162, 235, 0.75)',
+          backgroundColor: 'rgba(54, 162, 235, 0.45)',
           borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 0,
           yAxisID: 'y2',
-          maxBarThickness: secondary ? 7 : 14
+          intervalHours: 1,
+          grouped: false
         },
         {
           type: 'line',
           label: `Cloud Cover (%) — ${primaryLabel}`,
           viewGroup: 'clouds',
+          hidden: true,
           data: primary.cloudCover,
-          borderColor: 'rgba(71, 85, 105, 0.85)',
-          backgroundColor: 'rgba(71, 85, 105, 0.2)',
-          borderWidth: 2,
+          borderColor: 'rgba(71, 85, 105, 0.7)',
+          backgroundColor: 'rgba(100, 116, 139, 0.12)',
+          borderWidth: 1.5,
           pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHitRadius: 6,
           yAxisID: 'y3',
-          tension: 0.3
+          tension: 0,
+          fill: false,
+          order: 20
         },
         {
           type: 'line',
@@ -1914,24 +2353,29 @@
             label: `Precipitation (mm) — ${secondaryLabel}`,
             viewGroup: 'temperature',
             data: secondary.precip,
-            backgroundColor: 'rgba(249, 115, 22, 0.75)',
-            borderColor: 'rgba(249, 115, 22, 1)',
+            backgroundColor: 'rgba(30, 64, 175, 0.45)',
+            borderColor: 'rgba(30, 64, 175, 1)',
             borderWidth: 0,
             yAxisID: 'y2',
-            maxBarThickness: 7
+            intervalHours: 1,
+            grouped: false
           },
           {
             type: 'line',
             label: `Cloud Cover (%) — ${secondaryLabel}`,
             viewGroup: 'clouds',
+            hidden: true,
             data: secondary.cloudCover,
-            borderColor: 'rgba(220, 38, 38, 0.75)',
-            backgroundColor: 'rgba(220, 38, 38, 0.12)',
+            borderColor: 'rgba(100, 116, 139, 0.9)',
+            backgroundColor: 'rgba(100, 116, 139, 0.12)',
             borderDash: [4, 4],
             borderWidth: 2,
             pointRadius: 0,
             yAxisID: 'y3',
-            tension: 0.3
+            pointHoverRadius: 4,
+            pointHitRadius: 6,
+            tension: 0,
+            order: 20
           },
           {
             type: 'line',
@@ -1955,6 +2399,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { left: 12 } },
           plugins: {
             legend: {
               position: 'top',
@@ -2005,10 +2450,11 @@
             y3: {
               type: 'linear',
               position: 'right',
-              beginAtZero: true,
+              min: 0,
               max: 100,
               display: currentView === 'clouds',
               title: { display: true, text: 'Cloud Cover (%)' },
+              ticks: { stepSize: 25, callback: value => `${value}%` },
               grid: { drawOnChartArea: false }
             },
             y4: {
@@ -2037,7 +2483,7 @@
             }
           }
         },
-        plugins: [windArrowPlugin, dayBoundaryPlugin, precipIconPlugin]
+        plugins: [makeWeekendPlugin(times), makeCurrentTimePlugin(times, primary.timezone), windArrowPlugin, dayBoundaryPlugin, precipIconPlugin]
       });
 
       applyView(currentView);
@@ -2045,6 +2491,7 @@
 
     async function fetchWeather(locationName, days) {
       currentLocation = locationName;
+      clearCloudStrip('short-cloud-chart');
       const loc = locations[locationName];
 
       const primaryLabel = loc.modelLabel || loc.model;
@@ -2069,10 +2516,11 @@
 
       document.getElementById("short-chart-title").textContent = `${locationName} — ${days}-Day Hourly Forecast (${titleSuffix})`;
       renderChart(primary, primaryLabel, secondary, secondaryLabel, sunTimes);
+      renderCloudStrip('short-cloud-chart', primary.times, primary.cloudCover, primaryLabel.split(' — ')[0], primary.timezone);
     }
 
     function setActiveViewButton(view) {
-      document.querySelectorAll("#short-forecast .view-btn").forEach((button) => {
+      document.querySelectorAll("#short-forecast .view-btn[data-view]").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.view === view);
       });
     }
@@ -2095,7 +2543,7 @@
       fetchWeather(e.target.value, SHORT_FORECAST_DAYS).catch(showShortForecastError);
     });
 
-    document.querySelectorAll("#short-forecast .view-btn").forEach((button) => {
+    document.querySelectorAll("#short-forecast .view-btn[data-view]").forEach((button) => {
       button.addEventListener("click", () => {
         setActiveViewButton(button.dataset.view);
         applyView(button.dataset.view);
