@@ -1,9 +1,6 @@
 name: Update DTEK Schedule
 
 on:
-  schedule:
-    # Run every 10 minutes, 24/7
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
