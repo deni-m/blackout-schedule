@@ -358,7 +358,69 @@
                 font-size: 0.75em;
             }
         }
+
+        /* Theme toggle */
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(128, 128, 128, 0.15);
+        }
+
+        /* Dark theme */
+        html[data-theme="dark"] body { background: #121212; }
+        html[data-theme="dark"] .container { background: #1e1e1e; box-shadow: 0 2px 4px rgba(0,0,0,0.6); color: #e0e0e0; }
+        html[data-theme="dark"] .header { border-bottom-color: #333; }
+        html[data-theme="dark"] .title { color: #f0f0f0; }
+        html[data-theme="dark"] .queue-title { color: #ddd; }
+        html[data-theme="dark"] .date-title,
+        html[data-theme="dark"] .update-time { color: #aaa; }
+        html[data-theme="dark"] .dtek-update-time { color: #888; }
+        html[data-theme="dark"] .timeline { border-color: #444; background: #2a2a2a; }
+        html[data-theme="dark"] .legend { background: #262626; color: #ddd; }
+        html[data-theme="dark"] .separator { background: #333; }
+        html[data-theme="dark"] .theme-toggle { border-color: #555; color: #eee; }
+        html[data-theme="dark"] .status-yes { background: #3d9b41; }
+        html[data-theme="dark"] .status-no { background: #d8392e; }
+        html[data-theme="dark"] .status-first,
+        html[data-theme="dark"] .status-second { background: #e08600; }
+        html[data-theme="dark"] .status-unknown { background: #666; }
+        html[data-theme="dark"] .hour.current-hour { box-shadow: 0 0 0 2px #fff, inset 0 0 0 200px rgba(255, 255, 255, 0.3); }
+        html[data-theme="dark"] .hour.current-hour::after { color: #fff; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); }
+        html[data-theme="dark"] .hour.current-hour .current-hour-eta { background: #2a2a2a; color: #f0f0f0; border-color: #555; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        html[data-theme="dark"] .outage-block-label { color: #ff6b5e; border-color: #ff6b5e; }
+        html[data-theme="dark"] .power-on-label { color: #6fd573; border-color: #6fd573; }
     </style>
+    <script>
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem('theme'); } catch (e) {}
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+        function toggleTheme() {
+            var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('theme', next); } catch (e) {}
+            updateThemeButton();
+        }
+        function updateThemeButton() {
+            var btn = document.getElementById('theme-toggle');
+            if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        }
+        document.addEventListener('DOMContentLoaded', updateThemeButton);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -368,6 +430,7 @@
                 <div class="update-time">Згенеровано: 11.10.2026 12:01</div>
                 <div class="dtek-update-time">Дата оновлення ДТЕК: 11.10.2026 11:16</div>
             </div>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Змінити тему" aria-label="Змінити тему">🌙</button>
         </div>
 <div class="queue-section">
             <div class="queue-header">
